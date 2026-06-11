@@ -158,6 +158,13 @@ export default function ProvidersPage() {
             `/api/providers/nearby?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}`,
           );
 
+          const contentType = res.headers.get("content-type");
+
+          if (!res.ok || !contentType?.includes("application/json")) {
+            console.error("API failed or returned HTML:", await res.text());
+            return;
+          }
+
           const data = await res.json();
 
           setProviders(data);
