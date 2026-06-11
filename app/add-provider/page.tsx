@@ -5,6 +5,7 @@ import { useUser } from "@clerk/nextjs";
 
 export default function AddProviderPage() {
   const { user } = useUser();
+  const [success, setSuccess] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -44,7 +45,16 @@ export default function AddProviderPage() {
       setLoading(false);
 
       if (res.ok) {
-        alert("Provider registered successfully!");
+        setForm({
+          name: "",
+          service: "Plumber",
+          phone: "",
+        });
+
+        setSuccess(true);
+        setTimeout(() => {
+          setSuccess(false);
+        }, 5000);
       } else {
         alert("Something went wrong");
       }
@@ -64,6 +74,12 @@ export default function AddProviderPage() {
             Join UberFundi and start getting clients near you
           </p>
         </div>
+        {/* SUCCESS MESSAGE */}
+        {success && (
+          <div className="mb-4 rounded-xl bg-green-50 border border-green-200 p-4 text-green-700">
+            Provider registered successfully 🎉
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* NAME */}
@@ -71,6 +87,7 @@ export default function AddProviderPage() {
             <label className="text-sm text-gray-600">Full Name</label>
             <input
               name="name"
+              value={form.name}
               placeholder="John Doe"
               onChange={handleChange}
               required
@@ -83,6 +100,8 @@ export default function AddProviderPage() {
             <label className="text-sm text-gray-600">Service Type</label>
             <select
               name="service"
+              value={form.service}
+              required
               onChange={handleChange}
               className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition placeholder:text-gray-400 text-gray-500"
             >
@@ -100,6 +119,7 @@ export default function AddProviderPage() {
             <label className="text-sm text-gray-600">Phone Number</label>
             <input
               name="phone"
+              value={form.phone}
               placeholder="+254 7XX XXX XXX"
               onChange={handleChange}
               required
