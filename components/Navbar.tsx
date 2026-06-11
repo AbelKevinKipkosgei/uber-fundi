@@ -12,7 +12,7 @@ export default function Navbar() {
       <nav className="max-w-6xl mx-auto flex justify-between items-center px-6 py-4">
         {/* BRAND */}
         <Link href="/" className="text-xl font-bold text-gray-900">
-          <span className="text-blue-600">Service</span>Finder
+          <span className="text-blue-600">Uber</span>Fundi
         </Link>
 
         {/* LINKS */}
