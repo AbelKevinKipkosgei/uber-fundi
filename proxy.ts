@@ -1,6 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// Public routes (no login required)
+// Public routes (UI pages)
 const isPublicRoute = createRouteMatcher([
   "/",
   "/providers(.*)",
@@ -9,10 +9,19 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
 ]);
 
+// Public API routes (IMPORTANT)
+const isPublicApiRoute = createRouteMatcher([
+  "/api/providers(.*)", // 👈 THIS FIXES YOUR BUG
+]);
+
 export default clerkMiddleware(async (auth, request) => {
-  if (!isPublicRoute(request)) {
-    await auth.protect();
+  // allow public pages
+  if (isPublicRoute(request) || isPublicApiRoute(request)) {
+    return;
   }
+
+  // protect everything else
+  await auth.protect();
 });
 
 export const config = {
