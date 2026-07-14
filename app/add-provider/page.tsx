@@ -1,71 +1,271 @@
+// "use client";
+
+// import { useState } from "react";
+// import { useUser } from "@clerk/nextjs";
+
+// export default function AddProviderPage() {
+//   const { user } = useUser();
+//   const [success, setSuccess] = useState(false);
+
+//   const [form, setForm] = useState({
+//     name: "",
+//     service: "Plumber",
+//     phone: "",
+//   });
+
+//   const [loading, setLoading] = useState(false);
+
+//   const handleChange = (
+//     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+//   ) => {
+//     setForm({ ...form, [e.target.name]: e.target.value });
+//   };
+
+//   const handleSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault();
+//     setLoading(true);
+
+//     navigator.geolocation.getCurrentPosition(async (position) => {
+//       const latitude = position.coords.latitude;
+//       const longitude = position.coords.longitude;
+
+//       const res = await fetch("/api/providers", {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({
+//           clerk_user_id: user?.id,
+//           name: form.name,
+//           service: form.service,
+//           phone: form.phone,
+//           latitude,
+//           longitude,
+//         }),
+//       });
+
+//       setLoading(false);
+
+//       if (res.ok) {
+//         setForm({
+//           name: "",
+//           service: "Plumber",
+//           phone: "",
+//         });
+
+//         setSuccess(true);
+//         setTimeout(() => {
+//           setSuccess(false);
+//         }, 5000);
+//       } else {
+//         alert("Something went wrong");
+//       }
+//     });
+//   };
+
+//   return (
+//     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-white to-indigo-100 px-4">
+//       {/* CARD */}
+//       <div className="w-full max-w-lg bg-white/80 backdrop-blur-xl border border-gray-200 shadow-xl rounded-2xl p-8">
+//         {/* HEADER */}
+//         <div className="text-center mb-6">
+//           <h1 className="text-3xl font-bold text-gray-900">
+//             Become a Provider
+//           </h1>
+//           <p className="text-gray-500 mt-2">
+//             Join UberFundi and start getting clients near you
+//           </p>
+//         </div>
+//         {/* SUCCESS MESSAGE */}
+//         {success && (
+//           <div className="mb-4 rounded-xl bg-green-50 border border-green-200 p-4 text-green-700">
+//             Provider registered successfully 🎉
+//           </div>
+//         )}
+
+//         <form onSubmit={handleSubmit} className="space-y-4">
+//           {/* NAME */}
+//           <div>
+//             <label className="text-sm text-gray-600">Full Name</label>
+//             <input
+//               name="name"
+//               value={form.name}
+//               placeholder="John Doe"
+//               onChange={handleChange}
+//               required
+//               className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition placeholder:text-gray-400 text-gray-500"
+//             />
+//           </div>
+
+//           {/* SERVICE */}
+//           <div>
+//             <label className="text-sm text-gray-600">Service Type</label>
+//             <select
+//               name="service"
+//               value={form.service}
+//               required
+//               onChange={handleChange}
+//               className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition placeholder:text-gray-400 text-gray-500"
+//             >
+//               <option>Plumber</option>
+//               <option>Electrician</option>
+//               <option>Carpenter</option>
+//               <option>Mechanic</option>
+//               <option>Cleaner</option>
+//               <option>Painter</option>
+//             </select>
+//           </div>
+
+//           {/* PHONE */}
+//           <div>
+//             <label className="text-sm text-gray-600">Phone Number</label>
+//             <input
+//               name="phone"
+//               value={form.phone}
+//               placeholder="+254 7XX XXX XXX"
+//               onChange={handleChange}
+//               required
+//               className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition placeholder:text-gray-400 text-gray-500"
+//             />
+//           </div>
+
+//           {/* SUBMIT */}
+//           <button
+//             type="submit"
+//             disabled={loading}
+//             className="w-full mt-4 bg-blue-600 text-white py-3 rounded-xl font-medium shadow-md hover:bg-blue-700 transition disabled:opacity-60"
+//           >
+//             {loading ? "Registering..." : "Become a Provider"}
+//           </button>
+//         </form>
+
+//         {/* FOOTER NOTE */}
+//         <p className="text-xs text-center text-gray-400 mt-5">
+//           Your location is used to match you with nearby clients.
+//         </p>
+//       </div>
+//     </div>
+//   );
+// }
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
+
+type Category = {
+  id: string;
+  name: string;
+  slug: string;
+  children: { id: string; name: string; slug: string }[];
+};
 
 export default function AddProviderPage() {
   const { user } = useUser();
   const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
 
   const [form, setForm] = useState({
     name: "",
-    service: "Plumber",
     phone: "",
+    bio: "",
+    categoryId: "",
   });
 
-  const [loading, setLoading] = useState(false);
+  const [selectedSubcategoryIds, setSelectedSubcategoryIds] = useState<string[]>([]);
+
+  // Fetch categories (with their subcategories) on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch("/api/categories");
+        const data = await res.json();
+        setCategories(data);
+      } catch (err) {
+        console.error("Failed to load categories", err);
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const selectedCategory = categories.find((c) => c.id === form.categoryId);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
   ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    // Reset subcategory selections whenever the main category changes,
+    // since subcategories only make sense relative to their parent.
+    if (name === "categoryId") {
+      setSelectedSubcategoryIds([]);
+    }
+
+    setForm({ ...form, [name]: value });
+  };
+
+  const toggleSubcategory = (id: string) => {
+    setSelectedSubcategoryIds((prev) =>
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id],
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    navigator.geolocation.getCurrentPosition(async (position) => {
-      const latitude = position.coords.latitude;
-      const longitude = position.coords.longitude;
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
 
-      const res = await fetch("/api/providers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          clerk_user_id: user?.id,
-          name: form.name,
-          service: form.service,
-          phone: form.phone,
-          latitude,
-          longitude,
-        }),
-      });
+        try {
+          const res = await fetch("/api/providers", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              clerkUserId: user?.id,
+              name: form.name,
+              phone: form.phone,
+              bio: form.bio,
+              categoryId: form.categoryId,
+              subcategoryIds: selectedSubcategoryIds,
+              latitude,
+              longitude,
+            }),
+          });
 
-      setLoading(false);
-
-      if (res.ok) {
-        setForm({
-          name: "",
-          service: "Plumber",
-          phone: "",
-        });
-
-        setSuccess(true);
-        setTimeout(() => {
-          setSuccess(false);
-        }, 5000);
-      } else {
-        alert("Something went wrong");
-      }
-    });
+          if (res.ok) {
+            setForm({ name: "", phone: "", bio: "", categoryId: "" });
+            setSelectedSubcategoryIds([]);
+            setSuccess(true);
+            setTimeout(() => setSuccess(false), 5000);
+          } else {
+            const data = await res.json().catch(() => null);
+            alert(data?.error ?? "Something went wrong");
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Something went wrong");
+        } finally {
+          setLoading(false);
+        }
+      },
+      () => {
+        setLoading(false);
+        alert(
+          "We need your location to match you with nearby clients. Please enable location access and try again.",
+        );
+      },
+    );
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-white to-indigo-100 px-4">
-      {/* CARD */}
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-white to-indigo-100 px-4 py-12">
       <div className="w-full max-w-lg bg-white/80 backdrop-blur-xl border border-gray-200 shadow-xl rounded-2xl p-8">
-        {/* HEADER */}
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900">
             Become a Provider
@@ -74,7 +274,7 @@ export default function AddProviderPage() {
             Join UberFundi and start getting clients near you
           </p>
         </div>
-        {/* SUCCESS MESSAGE */}
+
         {success && (
           <div className="mb-4 rounded-xl bg-green-50 border border-green-200 p-4 text-green-700">
             Provider registered successfully 🎉
@@ -82,7 +282,6 @@ export default function AddProviderPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* NAME */}
           <div>
             <label className="text-sm text-gray-600">Full Name</label>
             <input
@@ -95,26 +294,51 @@ export default function AddProviderPage() {
             />
           </div>
 
-          {/* SERVICE */}
           <div>
-            <label className="text-sm text-gray-600">Service Type</label>
+            <label className="text-sm text-gray-600">Main Category</label>
             <select
-              name="service"
-              value={form.service}
+              name="categoryId"
+              value={form.categoryId}
               required
               onChange={handleChange}
-              className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition placeholder:text-gray-400 text-gray-500"
+              disabled={categoriesLoading}
+              className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition text-gray-500 disabled:opacity-60"
             >
-              <option>Plumber</option>
-              <option>Electrician</option>
-              <option>Carpenter</option>
-              <option>Mechanic</option>
-              <option>Cleaner</option>
-              <option>Painter</option>
+              <option value="" disabled>
+                {categoriesLoading ? "Loading categories..." : "Select a category"}
+              </option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
             </select>
           </div>
 
-          {/* PHONE */}
+          {selectedCategory && selectedCategory.children.length > 0 && (
+            <div>
+              <label className="text-sm text-gray-600">
+                Services you offer under {selectedCategory.name}
+              </label>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {selectedCategory.children.map((sub) => (
+                  <label
+                    key={sub.id}
+                    className="flex items-center gap-2 text-sm text-gray-600 border border-gray-200 rounded-xl px-3 py-2 cursor-pointer hover:border-blue-300"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedSubcategoryIds.includes(sub.id)}
+                      onChange={() => toggleSubcategory(sub.id)}
+                      className="accent-blue-600"
+                    />
+                    {sub.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="text-sm text-gray-600">Phone Number</label>
             <input
@@ -127,17 +351,29 @@ export default function AddProviderPage() {
             />
           </div>
 
-          {/* SUBMIT */}
+          <div>
+            <label className="text-sm text-gray-600">
+              Short Bio <span className="text-gray-400">(optional)</span>
+            </label>
+            <textarea
+              name="bio"
+              value={form.bio}
+              placeholder="Tell clients a bit about your experience..."
+              onChange={handleChange}
+              rows={3}
+              className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition placeholder:text-gray-400 text-gray-500 resize-none"
+            />
+          </div>
+
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || categoriesLoading}
             className="w-full mt-4 bg-blue-600 text-white py-3 rounded-xl font-medium shadow-md hover:bg-blue-700 transition disabled:opacity-60"
           >
             {loading ? "Registering..." : "Become a Provider"}
           </button>
         </form>
 
-        {/* FOOTER NOTE */}
         <p className="text-xs text-center text-gray-400 mt-5">
           Your location is used to match you with nearby clients.
         </p>
