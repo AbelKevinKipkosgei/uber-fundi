@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 type Category = {
   id: string;
@@ -13,6 +14,7 @@ type Category = {
 export default function AddProviderPage() {
   const { user } = useUser();
   const [success, setSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [categories, setCategories] = useState<Category[]>([]);
@@ -29,15 +31,17 @@ export default function AddProviderPage() {
     string[]
   >([]);
 
-  // Fetch categories (with their subcategories) on mount
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await fetch("/api/categories");
         const data = await res.json();
-        setCategories(data);
+        setCategories(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Failed to load categories", err);
+        setErrorMessage(
+          "Couldn't load categories. Please refresh and try again.",
+        );
       } finally {
         setCategoriesLoading(false);
       }
@@ -55,8 +59,6 @@ export default function AddProviderPage() {
   ) => {
     const { name, value } = e.target;
 
-    // Reset subcategory selections whenever the main category changes,
-    // since subcategories only make sense relative to their parent.
     if (name === "categoryId") {
       setSelectedSubcategoryIds([]);
     }
@@ -73,6 +75,7 @@ export default function AddProviderPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMessage(null);
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -102,18 +105,20 @@ export default function AddProviderPage() {
             setTimeout(() => setSuccess(false), 5000);
           } else {
             const data = await res.json().catch(() => null);
-            alert(data?.error ?? "Something went wrong");
+            setErrorMessage(
+              data?.error ?? "Something went wrong. Please try again.",
+            );
           }
         } catch (err) {
           console.error(err);
-          alert("Something went wrong");
+          setErrorMessage("Something went wrong. Please try again.");
         } finally {
           setLoading(false);
         }
       },
       () => {
         setLoading(false);
-        alert(
+        setErrorMessage(
           "We need your location to match you with nearby clients. Please enable location access and try again.",
         );
       },
@@ -133,8 +138,16 @@ export default function AddProviderPage() {
         </div>
 
         {success && (
-          <div className="mb-4 rounded-xl bg-green-50 border border-green-200 p-4 text-green-700">
-            Provider registered successfully 🎉
+          <div className="mb-4 flex items-start gap-2.5 rounded-xl bg-green-50 border border-green-200 p-4 text-green-700">
+            <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
+            <span>Provider registered successfully 🎉</span>
+          </div>
+        )}
+
+        {errorMessage && (
+          <div className="mb-4 flex items-start gap-2.5 rounded-xl bg-red-50 border border-red-200 p-4 text-red-700">
+            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+            <span>{errorMessage}</span>
           </div>
         )}
 
