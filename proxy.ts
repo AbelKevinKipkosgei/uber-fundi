@@ -12,6 +12,9 @@ const isPublicRoute = createRouteMatcher([
 // Public API routes (IMPORTANT)
 const isPublicApiRoute = createRouteMatcher([
   "/api/providers(.*)", // 👈 THIS FIXES YOUR BUG
+  "/api/categories(.*)",
+  "/api/providers/category(.*)",
+  "/api/providers/nearby(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
