@@ -300,8 +300,9 @@ export default function CategoryDetailPage() {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {providers.map((provider) => (
-              <div
+              <Link
                 key={provider.id}
+                href={`/provider/${provider.id}`}
                 className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 p-6"
               >
                 <div className="flex items-start justify-between">
@@ -350,10 +351,10 @@ export default function CategoryDetailPage() {
                   </p>
                 </div>
 
-                <button className="mt-6 w-full rounded-xl bg-blue-600 text-white py-3 font-medium hover:bg-blue-700 transition">
-                  Contact Provider
-                </button>
-              </div>
+                <div className="mt-6 text-sm font-medium text-blue-600">
+                  View profile →
+                </div>
+              </Link>
             ))}
           </div>
         )}
