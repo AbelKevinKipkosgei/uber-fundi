@@ -76,7 +76,7 @@ export async function PATCH(req: Request) {
       }
     }
 
-    const provider = await prisma.$transaction(async (tx) => {
+    const provider = await prisma.$transaction(async (tx: any) => {
       if (subIds) {
         await tx.providerSubcategory.deleteMany({
           where: { providerId: existing.id },
