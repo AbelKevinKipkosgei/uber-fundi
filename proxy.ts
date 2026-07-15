@@ -1,31 +1,42 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+// import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// Public routes (UI pages)
-const isPublicRoute = createRouteMatcher([
-  "/",
-  "/providers(.*)",
-  "/provider(.*)",
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-]);
+// // Public routes (UI pages)
+// const isPublicRoute = createRouteMatcher([
+//   "/",
+//   "/providers(.*)",
+//   "/provider(.*)",
+//   "/sign-in(.*)",
+//   "/sign-up(.*)",
+// ]);
 
-// Public API routes (IMPORTANT)
-const isPublicApiRoute = createRouteMatcher([
-  "/api/providers(.*)", // 👈 THIS FIXES YOUR BUG
-  "/api/categories(.*)",
-  "/api/providers/category(.*)",
-  "/api/providers/nearby(.*)",
-]);
+// // Public API routes (IMPORTANT)
+// const isPublicApiRoute = createRouteMatcher([
+//   "/api/providers(.*)", // 👈 THIS FIXES YOUR BUG
+//   "/api/categories(.*)",
+//   "/api/providers/category(.*)",
+//   "/api/providers/nearby(.*)",
+// ]);
 
-export default clerkMiddleware(async (auth, request) => {
-  // allow public pages
-  if (isPublicRoute(request) || isPublicApiRoute(request)) {
-    return;
-  }
+// export default clerkMiddleware(async (auth, request) => {
+//   // allow public pages
+//   if (isPublicRoute(request) || isPublicApiRoute(request)) {
+//     return;
+//   }
 
-  // protect everything else
-  await auth.protect();
-});
+//   // protect everything else
+//   await auth.protect();
+// });
+
+// export const config = {
+//   matcher: [
+//     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+//     "/(api|trpc)(.*)",
+//   ],
+// };
+
+import { clerkMiddleware } from "@clerk/nextjs/server";
+
+export default clerkMiddleware();
 
 export const config = {
   matcher: [
