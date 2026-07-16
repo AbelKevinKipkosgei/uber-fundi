@@ -1,13 +1,54 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs";
+import {
+  WrenchScrewdriverIcon as WrenchOutline,
+  Squares2X2Icon as DashboardOutline,
+  ChatBubbleLeftRightIcon as ChatOutline,
+} from "@heroicons/react/24/outline";
+import {
+  WrenchScrewdriverIcon as WrenchSolid,
+  Squares2X2Icon as DashboardSolid,
+  ChatBubbleLeftRightIcon as ChatSolid,
+} from "@heroicons/react/24/solid";
 import NotificationBell from "@/components/NotificationBell";
-import { LayoutDashboard, Compass, MessageSquare } from "lucide-react";
 import { useEffect, useState } from "react";
+
+function NavLink({
+  href,
+  active,
+  outlineIcon: OutlineIcon,
+  solidIcon: SolidIcon,
+  label,
+}: {
+  href: string;
+  active: boolean;
+  outlineIcon: React.ElementType;
+  solidIcon: React.ElementType;
+  label: string;
+}) {
+  const Icon = active ? SolidIcon : OutlineIcon;
+
+  return (
+    <Link
+      href={href}
+      className={`flex items-center gap-1.5 transition-colors ${
+        active
+          ? "text-gray-600 font-medium"
+          : "text-gray-600 hover:text-blue-600"
+      }`}
+    >
+      <Icon className="w-4.5 h-4.5" />
+      {label}
+    </Link>
+  );
+}
 
 export default function Navbar() {
   const { isSignedIn, isLoaded } = useUser();
+  const pathname = usePathname();
   const [hasProviderProfile, setHasProviderProfile] = useState<boolean | null>(
     null,
   );
@@ -36,46 +77,43 @@ export default function Navbar() {
     };
   }, [isSignedIn]);
 
-  if (!isLoaded) return null; // or a loading spinner
+  if (!isLoaded) return null;
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-white/70 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b bg-white/90 backdrop-blur-md">
       <nav className="max-w-6xl mx-auto flex justify-between items-center px-6 py-4">
-        {/* BRAND */}
         <Link href="/" className="text-xl font-bold text-gray-900">
           <span className="text-blue-600">Uber</span>Fundi
         </Link>
 
-        {/* LINKS */}
         <div className="hidden md:flex items-center gap-6 text-sm">
-          <Link
+          <NavLink
             href="/providers"
-            className="flex items-center gap-1.5 text-gray-600 hover:text-blue-600"
-          >
-            <Compass className="w-4 h-4" />
-            Services
-          </Link>
+            active={pathname.startsWith("/providers")}
+            outlineIcon={WrenchOutline}
+            solidIcon={WrenchSolid}
+            label="Services"
+          />
           {isSignedIn && (
-            <Link
+            <NavLink
               href="/provider/dashboard"
-              className="flex items-center gap-1.5 text-gray-600 hover:text-blue-600"
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              Dashboard
-            </Link>
+              active={pathname.startsWith("/provider/dashboard")}
+              outlineIcon={DashboardOutline}
+              solidIcon={DashboardSolid}
+              label="Dashboard"
+            />
           )}
           {isSignedIn && (
-            <Link
+            <NavLink
               href="/messages"
-              className="flex items-center gap-1.5 text-gray-600 hover:text-blue-600"
-            >
-              <MessageSquare className="w-4 h-4" />
-              Messages
-            </Link>
+              active={pathname.startsWith("/messages")}
+              outlineIcon={ChatOutline}
+              solidIcon={ChatSolid}
+              label="Messages"
+            />
           )}
         </div>
 
-        {/* AUTH / CTA */}
         <div className="flex items-center gap-3">
           {!isSignedIn ? (
             <>
