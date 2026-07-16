@@ -242,11 +242,48 @@ export default function ProviderProfilePage() {
           </div>
         </div>
 
-        <div className="mt-8 bg-white rounded-3xl border border-gray-100 shadow-sm p-8 text-center">
-          <h2 className="text-lg font-semibold text-gray-900">Recent Work</h2>
-          <p className="mt-2 text-sm text-gray-500">
-            {provider.name.split(" ")[0]} hasn&apos;t posted any work yet.
-          </p>
+        <div className="mt-8 bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Recent Work
+          </h2>
+          {posts.length === 0 ? (
+            <p className="text-sm text-gray-500 text-center py-6">
+              {provider.name.split(" ")[0]} hasn&apos;t posted any work yet.
+            </p>
+          ) : (
+            <div className="grid sm:grid-cols-2 gap-4">
+              {posts.map((post) => (
+                <div
+                  key={post.id}
+                  className="rounded-2xl border border-gray-100 overflow-hidden"
+                >
+                  {post.images[0] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={post.images[0]}
+                      alt={post.title}
+                      className="w-full h-40 object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-40 bg-gray-50 flex items-center justify-center text-gray-300 text-sm">
+                      No photo
+                    </div>
+                  )}
+                  <div className="p-4">
+                    <p className="font-medium text-gray-900">{post.title}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {post.category.name}
+                    </p>
+                    {post.description && (
+                      <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                        {post.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
