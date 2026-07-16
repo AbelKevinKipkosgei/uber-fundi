@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import CreatePostForm from "@/components/provider/CreatePostForm";
+import PostsList from "@/components/provider/PostsList";
 import {
   AlertCircle,
   CheckCircle2,
@@ -47,7 +49,13 @@ const ICONS: Record<string, React.ElementType> = {
   "tv-mounting-home-tech": Tv,
 };
 
-function CategoryIcon({ slug, className }: { slug: string; className?: string }) {
+function CategoryIcon({
+  slug,
+  className,
+}: {
+  slug: string;
+  className?: string;
+}) {
   const Icon = ICONS[slug] ?? Layers;
   return <Icon className={className} />;
 }
@@ -58,15 +66,20 @@ export default function ProviderDashboardPage() {
   const [notFound, setNotFound] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [availableSubcategories, setAvailableSubcategories] = useState<Subcategory[]>([]);
+  const [availableSubcategories, setAvailableSubcategories] = useState<
+    Subcategory[]
+  >([]);
 
   const [form, setForm] = useState({ name: "", phone: "", bio: "" });
   const [isAvailable, setIsAvailable] = useState(true);
-  const [selectedSubcategoryIds, setSelectedSubcategoryIds] = useState<string[]>([]);
+  const [selectedSubcategoryIds, setSelectedSubcategoryIds] = useState<
+    string[]
+  >([]);
 
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [postsRefreshKey, setPostsRefreshKey] = useState(0);
 
   useEffect(() => {
     const load = async () => {
@@ -88,9 +101,7 @@ export default function ProviderDashboardPage() {
         setProvider(data);
         setForm({ name: data.name, phone: data.phone, bio: data.bio ?? "" });
         setIsAvailable(data.isAvailable ?? true);
-        setSelectedSubcategoryIds(
-          data.subcategories.map((s) => s.category.id),
-        );
+        setSelectedSubcategoryIds(data.subcategories.map((s) => s.category.id));
 
         const catRes = await fetch("/api/categories");
         const categories: Category[] = await catRes.json();
@@ -172,8 +183,8 @@ export default function ProviderDashboardPage() {
             You&apos;re not a provider yet
           </h1>
           <p className="mt-2 text-gray-500">
-            Create a provider profile to start getting matched with clients
-            near you.
+            Create a provider profile to start getting matched with clients near
+            you.
           </p>
           <Link
             href="/add-provider"
@@ -312,8 +323,8 @@ export default function ProviderDashboardPage() {
           )}
 
           <p className="text-xs text-gray-400">
-            Your main category ({provider.category.name}) can&apos;t be
-            changed here. Contact support if you need to switch categories.
+            Your main category ({provider.category.name}) can&apos;t be changed
+            here. Contact support if you need to switch categories.
           </p>
 
           <button
@@ -325,12 +336,24 @@ export default function ProviderDashboardPage() {
           </button>
         </form>
 
-        <div className="mt-8 bg-white rounded-3xl border border-gray-100 shadow-sm p-8 text-center">
-          <h2 className="text-lg font-semibold text-gray-900">Your Posts</h2>
-          <p className="mt-2 text-sm text-gray-500">
-            Post examples of your work to build trust with clients — coming
-            soon.
-          </p>
+        <div className="mt-8 space-y-6">
+          <CreatePostForm
+            categoryOptions={[
+              { id: provider.category.id, name: provider.category.name },
+              ...provider.subcategories.map((s) => ({
+                id: s.category.id,
+                name: s.category.name,
+              })),
+            ]}
+            onCreated={() => setPostsRefreshKey((k) => k + 1)}
+          />
+
+          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Your Posts
+            </h2>
+            <PostsList providerId={provider.id} refreshKey={postsRefreshKey} />
+          </div>
         </div>
       </div>
     </div>
