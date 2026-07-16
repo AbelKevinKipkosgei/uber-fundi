@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs";
-import { LayoutDashboard, Compass } from "lucide-react";
+import { LayoutDashboard, Compass, MessageSquare } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function Navbar() {
@@ -61,6 +61,15 @@ export default function Navbar() {
             >
               <LayoutDashboard className="w-4 h-4" />
               Dashboard
+            </Link>
+          )}
+          {isSignedIn && (
+            <Link
+              href="/messages"
+              className="flex items-center gap-1.5 text-gray-600 hover:text-blue-600"
+            >
+              <MessageSquare className="w-4 h-4" />
+              Messages
             </Link>
           )}
         </div>
