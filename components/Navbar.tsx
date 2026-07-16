@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs";
+import NotificationBell from "@/components/NotificationBell";
 import { LayoutDashboard, Compass, MessageSquare } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -101,6 +102,7 @@ export default function Navbar() {
                 {hasProviderProfile ? "Manage Services" : "Become a Provider"}
               </Link>
 
+              <NotificationBell />
               <UserButton />
             </>
           )}
