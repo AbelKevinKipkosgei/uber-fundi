@@ -34,6 +34,14 @@ type Provider = {
   subcategories: { category: Subcategory }[];
 };
 
+type Post = {
+  id: string;
+  title: string;
+  description: string | null;
+  images: string[];
+  category: { name: string };
+};
+
 const ICONS: Record<string, React.ElementType> = {
   plumbing: Wrench,
   electrical: Zap,
