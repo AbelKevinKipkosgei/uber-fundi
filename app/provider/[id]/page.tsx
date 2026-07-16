@@ -91,6 +91,33 @@ export default function ProviderProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
+  const router = useRouter();
+  const { user } = useUser();
+  const [startingChat, setStartingChat] = useState(false);
+
+  const handleMessage = async () => {
+    setStartingChat(true);
+    try {
+      const res = await fetch("/api/conversations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ providerId: provider?.id }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        router.push(`/messages/${data.conversationId}`);
+      } else {
+        setError(data.error ?? "Failed to start conversation");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Failed to start conversation");
+    } finally {
+      setStartingChat(false);
+    }
+  };
 
   useEffect(() => {
     const fetchProvider = async () => {
