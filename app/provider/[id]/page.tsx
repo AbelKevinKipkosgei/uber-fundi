@@ -87,6 +87,7 @@ export default function ProviderProfilePage() {
   const [provider, setProvider] = useState<Provider | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
 
   useEffect(() => {
     const fetchProvider = async () => {
@@ -101,6 +102,10 @@ export default function ProviderProfilePage() {
 
         const data = await res.json();
         setProvider(data);
+
+        const postsRes = await fetch(`/api/posts?providerId=${data.id}`);
+        const postsData = await postsRes.json();
+        setPosts(Array.isArray(postsData) ? postsData : []);
       } catch (err) {
         console.error(err);
         setError("Failed to load provider");
