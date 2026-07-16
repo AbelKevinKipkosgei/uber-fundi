@@ -31,6 +31,7 @@ type Provider = {
   bio: string | null;
   rating: number | null;
   isAvailable: boolean | null;
+  isOwnProfile: boolean;
   createdAt: string;
   category: { id: string; name: string; slug: string };
   subcategories: { category: Subcategory }[];
