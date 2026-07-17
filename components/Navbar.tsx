@@ -52,6 +52,7 @@ export default function Navbar() {
   const [hasProviderProfile, setHasProviderProfile] = useState<boolean | null>(
     null,
   );
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (!isSignedIn) {
@@ -74,6 +75,35 @@ export default function Navbar() {
 
     return () => {
       cancelled = true;
+    };
+  }, [isSignedIn]);
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      setUnreadCount(0);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchUnread = async () => {
+      try {
+        const res = await fetch("/api/conversations/unread-count");
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled) setUnreadCount(data.count ?? 0);
+        }
+      } catch {
+        // silent fail — badge just won't update this cycle
+      }
+    };
+
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 15000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
     };
   }, [isSignedIn]);
 
