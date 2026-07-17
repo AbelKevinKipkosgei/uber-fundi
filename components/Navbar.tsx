@@ -36,7 +36,7 @@ function NavLink({
   return (
     <Link
       href={href}
-      className={`flex items-center gap-1.5 transition-colors ${
+      className={`relative flex items-center gap-1.5 transition-colors ${
         active
           ? "text-gray-600 font-medium"
           : "text-gray-600 hover:text-blue-600"
