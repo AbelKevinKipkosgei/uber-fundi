@@ -22,12 +22,14 @@ function NavLink({
   outlineIcon: OutlineIcon,
   solidIcon: SolidIcon,
   label,
+  badge,
 }: {
   href: string;
   active: boolean;
   outlineIcon: React.ElementType;
   solidIcon: React.ElementType;
   label: string;
+  badge?: number;
 }) {
   const Icon = active ? SolidIcon : OutlineIcon;
 
@@ -42,6 +44,11 @@ function NavLink({
     >
       <Icon className="w-4.5 h-4.5" />
       {label}
+      {!!badge && badge > 0 && (
+        <span className="absolute -top-2 -right-3 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold flex items-center justify-center">
+          {badge > 9 ? "9+" : badge}
+        </span>
+      )}
     </Link>
   );
 }
@@ -140,6 +147,7 @@ export default function Navbar() {
               outlineIcon={ChatOutline}
               solidIcon={ChatSolid}
               label="Messages"
+              badge={unreadCount}
             />
           )}
         </div>
