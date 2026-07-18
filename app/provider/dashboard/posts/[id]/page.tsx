@@ -181,7 +181,6 @@ export default function EditPostPage() {
 
           <Link
             href={`/posts/${params.id}`}
-            target="_blank"
             className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600"
           >
             View public post
