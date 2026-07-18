@@ -25,8 +25,22 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Deleting a top-level comment also removes its replies, since they
-    // can't meaningfully exist without their parent.
+    // Get any replies so we can clean up their likes too, since a top-level
+    // delete cascades to its replies.
+    const replies = await prisma.comment.findMany({
+      where: { parentId: id },
+      select: { id: true },
+    });
+    const replyIds = replies.map((r) => r.id);
+    const allCommentIds = [id, ...replyIds];
+
+    // Likes must go first — the foreign key from comment_likes to comments
+    // is RESTRICT, so Postgres blocks deleting a comment that still has
+    // likes pointing at it.
+    await prisma.commentLike.deleteMany({
+      where: { commentId: { in: allCommentIds } },
+    });
+
     await prisma.comment.deleteMany({ where: { parentId: id } });
     await prisma.comment.delete({ where: { id } });
 
