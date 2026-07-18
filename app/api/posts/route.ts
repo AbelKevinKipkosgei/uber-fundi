@@ -17,11 +17,20 @@ export async function GET(req: Request) {
   try {
     const posts = await prisma.post.findMany({
       where: { providerId: parseInt(providerId, 10) },
-      include: { category: true },
+      include: {
+        category: true,
+        _count: { select: { likes: true, comments: true } },
+      },
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json(posts);
+    const formatted = posts.map((p) => ({
+      ...p,
+      likeCount: p._count.likes,
+      commentCount: p._count.comments,
+    }));
+
+    return NextResponse.json(formatted);
   } catch (error) {
     console.error(error);
     return NextResponse.json(
