@@ -6,6 +6,7 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const { userId } = await auth();
   const { id } = await params;
 
   try {
@@ -20,6 +21,7 @@ export async function GET(
             category: { select: { slug: true, name: true } },
           },
         },
+        _count: { select: { likes: true } },
       },
     });
 
@@ -27,7 +29,17 @@ export async function GET(
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
-    return NextResponse.json(post);
+    const isLikedByMe = userId
+      ? !!(await prisma.like.findUnique({
+          where: { postId_userId: { postId: id, userId } },
+        }))
+      : false;
+
+    return NextResponse.json({
+      ...post,
+      likeCount: post._count.likes,
+      isLikedByMe,
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
@@ -104,9 +116,11 @@ export async function PATCH(
     }
 
     if (categoryId) {
-      const allowedCategoryIds = new Set([
+      const allowedCategoryIds = new Set<string>([
         existing.provider.categoryId,
-        ...existing.provider.subcategories.map((s) => s.categoryId),
+        ...existing.provider.subcategories.map(
+          (s: { categoryId: string }) => s.categoryId,
+        ),
       ]);
 
       if (!allowedCategoryIds.has(categoryId)) {
