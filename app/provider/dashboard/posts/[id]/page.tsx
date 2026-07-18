@@ -13,6 +13,7 @@ import {
   Trash2,
   ExternalLink,
 } from "lucide-react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 type CategoryOption = { id: string; name: string };
 
@@ -43,6 +44,7 @@ export default function EditPostPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -119,8 +121,6 @@ export default function EditPostPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm("Delete this post permanently? This can't be undone.")) return;
-
     setDeleting(true);
     try {
       const res = await fetch(`/api/posts/${params.id}`, { method: "DELETE" });
@@ -311,7 +311,7 @@ export default function EditPostPage() {
             </button>
             <button
               type="button"
-              onClick={handleDelete}
+              onClick={() => setShowDeleteConfirm(true)}
               disabled={deleting}
               className="px-4 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 transition disabled:opacity-60"
             >
@@ -320,6 +320,17 @@ export default function EditPostPage() {
           </div>
         </form>
       </div>
+      {showDeleteConfirm && (
+        <ConfirmDialog
+          title="Delete this post?"
+          message="This will permanently remove the post and its photos. This can't be undone."
+          onConfirm={() => {
+            setShowDeleteConfirm(false);
+            handleDelete();
+          }}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+      )}
     </div>
   );
 }
