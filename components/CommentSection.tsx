@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Trash2, CornerDownRight, Heart } from "lucide-react";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import { request } from "http";
 
 type Author = { clerkUserId: string; name: string; imageUrl: string | null };
 
@@ -176,6 +178,11 @@ export default function CommentSection({ postId }: { postId: string }) {
     Record<string, string | null>
   >({});
   const toggleCommentLike = useCommentLikeToggle(setComments);
+  const [pendingDelete, setPendingDelete] = useState<{
+    id: string;
+    isReply: boolean;
+    parentId?: string;
+  } | null>(null);
 
   const loadInitial = async () => {
     setLoading(true);
@@ -307,12 +314,14 @@ export default function CommentSection({ postId }: { postId: string }) {
     }
   };
 
-  const handleDeleteComment = async (
-    id: string,
-    isReply: boolean,
-    parentId?: string,
-  ) => {
-    if (!confirm("Delete this comment?")) return;
+  const requestDelete = (id: string, isReply: boolean, parentId?: string) => {
+    setPendingDelete({ id, isReply, parentId });
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    const { id, isReply, parentId } = pendingDelete;
+    setPendingDelete(null);
 
     try {
       const res = await fetch(`/api/comments/${id}`, { method: "DELETE" });
@@ -418,7 +427,7 @@ export default function CommentSection({ postId }: { postId: string }) {
                 </div>
                 {comment.author.clerkUserId === user?.id && (
                   <button
-                    onClick={() => handleDeleteComment(comment.id, false)}
+                    onClick={() => requestDelete(comment.id, false)}
                     className="text-gray-300 hover:text-red-500 transition shrink-0"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -459,9 +468,7 @@ export default function CommentSection({ postId }: { postId: string }) {
                       key={reply.id}
                       reply={reply}
                       currentUserId={user?.id}
-                      onDelete={(id) =>
-                        handleDeleteComment(id, true, comment.id)
-                      }
+                      onDelete={(id) => requestDelete(id, true, comment.id)}
                       onToggleLike={(id) =>
                         toggleCommentLike(id, true, comment.id)
                       }
@@ -498,6 +505,14 @@ export default function CommentSection({ postId }: { postId: string }) {
         >
           {loadingMore ? "Loading..." : "Load more comments"}
         </button>
+      )}
+      {pendingDelete && (
+        <ConfirmDialog
+          title="Delete comment?"
+          message="This can't be undone. Any replies to it will also be deleted."
+          onConfirm={confirmDelete}
+          onCancel={() => setPendingDelete(null)}
+        />
       )}
     </div>
   );
