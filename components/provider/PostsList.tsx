@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Trash2 } from "lucide-react";
+import { Trash2, Heart, MessageCircle } from "lucide-react";
 
 type Post = {
   id: string;
@@ -10,6 +10,8 @@ type Post = {
   description: string | null;
   images: string[];
   createdAt: string;
+  likeCount: number;
+  commentCount: number;
   category: { name: string };
 };
 
@@ -100,6 +102,16 @@ export default function PostsList({
               {post.title}
             </p>
             <p className="text-xs text-gray-500 mt-0.5">{post.category.name}</p>
+            <div className="flex items-center gap-3 mt-2">
+              <span className="flex items-center gap-1 text-xs text-gray-500">
+                <Heart className="w-3 h-3" />
+                {post.likeCount}
+              </span>
+              <span className="flex items-center gap-1 text-xs text-gray-500">
+                <MessageCircle className="w-3 h-3" />
+                {post.commentCount}
+              </span>
+            </div>
           </div>
 
           <button
