@@ -23,6 +23,7 @@ model Provider {
   category      Category            @relation("ProviderMainCategory", fields: [categoryId], references: [id])
   subcategories ProviderSubcategory[]
   posts         Post[]
+  reviews       Review[]
 
   @@map("providers")
 }
@@ -64,6 +65,8 @@ model Post {
 
   provider    Provider @relation(fields: [providerId], references: [id])
   category    Category @relation(fields: [categoryId], references: [id])
+  likes       Like[]
+  comments    Comment[]
 
   @@map("posts")
 }
@@ -104,4 +107,46 @@ model Notification {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("notifications")
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  postId    String   @map("post_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  post      Post     @relation(fields: [postId], references: [id])
+
+  @@unique([postId, userId])
+  @@map("likes")
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  providerId Int      @map("provider_id")
+  reviewerId String   @map("reviewer_id")
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  provider   Provider @relation(fields: [providerId], references: [id])
+
+  @@unique([providerId, reviewerId])
+  @@map("reviews")
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  postId    String    @map("post_id")
+  authorId  String    @map("author_id")
+  parentId  String?   @map("parent_id")
+  body      String
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  post      Post      @relation(fields: [postId], references: [id])
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+
+  @@map("comments")
 }
