@@ -199,10 +199,10 @@ export default function PostDetailPage() {
               Posted by {post.provider.name}
             </Link>
           </div>
+          <div className="border-t border-gray-100 p-8">
+            <CommentSection postId={post.id} />
+          </div>
         </div>
-      </div>
-      <div className="mt-8">
-        <CommentSection postId={post.id} />
       </div>
     </div>
   );
