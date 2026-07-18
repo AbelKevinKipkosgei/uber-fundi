@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Bell, MessageSquare, CheckCheck } from "lucide-react";
+import { Bell, MessageSquare, Star, Heart, CheckCheck } from "lucide-react";
 
 type Notification = {
   id: string;
@@ -18,8 +18,13 @@ const POLL_INTERVAL_MS = 15000;
 
 function iconForType(type: string) {
   switch (type) {
-    case "NEW_MESSAGE":
+    case "NEW_COMMENT":
+    case "NEW_REPLY":
       return MessageSquare;
+    case "NEW_RATING":
+      return Star;
+    case "COMMENT_LIKED":
+      return Heart;
     default:
       return Bell;
   }
