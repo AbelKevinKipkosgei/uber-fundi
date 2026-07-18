@@ -267,8 +267,8 @@ export default function CommentSection({ postId }: { postId: string }) {
       if (res.ok) {
         const data = await res.json();
         setComments((prev) => [
-          ...prev,
           { ...data.comment, replies: [], replyCount: 0 },
+          ...prev,
         ]);
         setNewComment("");
       }
