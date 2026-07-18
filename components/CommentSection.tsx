@@ -117,7 +117,7 @@ function ReplyRow({
   reply: Reply;
   onDelete: (id: string) => void;
   onToggleLike: (id: string) => void;
-  onReply: (authorName: string) => void;
+  onReply: (authorName: string, authorClerkId: string) => void;
   currentUserId: string | null | undefined;
 }) {
   return (
@@ -146,7 +146,7 @@ function ReplyRow({
             {reply.likeCount > 0 ? reply.likeCount : "Like"}
           </button>
           <button
-            onClick={() => onReply(reply.author.name)}
+            onClick={() => onReply(reply.author.name, reply.author.clerkUserId)}
             className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600 transition-colors"
           >
             <CornerDownRight className="w-3 h-3" />
@@ -194,6 +194,10 @@ export default function CommentSection({ postId }: { postId: string }) {
     isReply: boolean;
     parentId?: string;
   } | null>(null);
+
+  const [replyMentionTargets, setReplyMentionTargets] = useState<
+    Record<string, string>
+  >({});
 
   const loadInitial = async () => {
     setLoading(true);
@@ -299,7 +303,11 @@ export default function CommentSection({ postId }: { postId: string }) {
       const res = await fetch(`/api/posts/${postId}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, parentId }),
+        body: JSON.stringify({
+          text,
+          parentId,
+          mentionedUserId: replyMentionTargets[parentId] || null,
+        }),
       });
 
       if (res.ok) {
@@ -316,6 +324,7 @@ export default function CommentSection({ postId }: { postId: string }) {
           ),
         );
         setReplyDrafts((prev) => ({ ...prev, [parentId]: "" }));
+        setReplyMentionTargets((prev) => ({ ...prev, [parentId]: "" }));
         setReplyingTo(null);
       }
     } catch (err) {
@@ -325,9 +334,14 @@ export default function CommentSection({ postId }: { postId: string }) {
     }
   };
 
-  const handleReplyToReply = (parentId: string, authorName: string) => {
+  const handleReplyToReply = (
+    parentId: string,
+    authorName: string,
+    authorClerkId: string,
+  ) => {
     setReplyingTo(parentId);
     setReplyDrafts((prev) => ({ ...prev, [parentId]: `@${authorName} ` }));
+    setReplyMentionTargets((prev) => ({ ...prev, [parentId]: authorClerkId }));
   };
 
   const requestDelete = (id: string, isReply: boolean, parentId?: string) => {
@@ -489,7 +503,11 @@ export default function CommentSection({ postId }: { postId: string }) {
                         toggleCommentLike(id, true, comment.id)
                       }
                       onReply={(authorName) =>
-                        handleReplyToReply(comment.id, authorName)
+                        handleReplyToReply(
+                          comment.id,
+                          authorName,
+                          reply.author.clerkUserId,
+                        )
                       }
                     />
                   ))}
