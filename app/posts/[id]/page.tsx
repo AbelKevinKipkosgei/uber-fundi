@@ -201,6 +201,9 @@ export default function PostDetailPage() {
           </div>
         </div>
       </div>
+      <div className="mt-8">
+        <CommentSection postId={post.id} />
+      </div>
     </div>
   );
 }
