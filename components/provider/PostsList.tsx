@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Trash2, Heart, MessageCircle } from "lucide-react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 type Post = {
   id: string;
@@ -25,6 +26,7 @@ export default function PostsList({
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -43,7 +45,15 @@ export default function PostsList({
     fetchPosts();
   }, [providerId, refreshKey]);
 
-  const handleDelete = async (id: string) => {
+  const requestDelete = (id: string) => {
+    setPendingDeleteId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteId) return;
+    const id = pendingDeleteId;
+    setPendingDeleteId(null);
+
     setDeletingId(id);
     try {
       const res = await fetch(`/api/posts/${id}`, { method: "DELETE" });
@@ -118,7 +128,7 @@ export default function PostsList({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              handleDelete(post.id);
+              requestDelete(post.id);
             }}
             disabled={deletingId === post.id}
             className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 shadow-sm flex items-center justify-center text-gray-500 hover:text-red-600 opacity-0 group-hover:opacity-100 transition disabled:opacity-60"
@@ -127,6 +137,14 @@ export default function PostsList({
           </button>
         </Link>
       ))}
+      {pendingDeleteId && (
+        <ConfirmDialog
+          title="Delete this post?"
+          message="This will permanently remove the post and its photos. This can't be undone."
+          onConfirm={confirmDelete}
+          onCancel={() => setPendingDeleteId(null)}
+        />
+      )}
     </div>
   );
 }
