@@ -7,10 +7,24 @@ import {
   REPLIES_PREVIEW_SIZE,
 } from "@/lib/commentPagination";
 
+async function withLikeData(commentId: string, userId: string | null) {
+  const [likeCount, isLikedByMe] = await Promise.all([
+    prisma.commentLike.count({ where: { commentId } }),
+    userId
+      ? prisma.commentLike
+          .findUnique({ where: { commentId_userId: { commentId, userId } } })
+          .then((r) => !!r)
+      : Promise.resolve(false),
+  ]);
+
+  return { likeCount, isLikedByMe };
+}
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const { userId } = await auth();
   const { id } = await params;
   const { searchParams } = new URL(req.url);
   const cursor = searchParams.get("cursor");
@@ -28,7 +42,7 @@ export async function GET(
 
     const withDetails = await Promise.all(
       page.map(async (comment) => {
-        const [author, replies, replyCount] = await Promise.all([
+        const [author, replies, replyCount, likeData] = await Promise.all([
           resolveParticipant(comment.authorId),
           prisma.comment.findMany({
             where: { parentId: comment.id },
@@ -36,20 +50,23 @@ export async function GET(
             take: REPLIES_PREVIEW_SIZE,
           }),
           prisma.comment.count({ where: { parentId: comment.id } }),
+          withLikeData(comment.id, userId),
         ]);
 
-        const repliesWithAuthors = await Promise.all(
+        const repliesWithDetails = await Promise.all(
           replies.map(async (r) => ({
             ...r,
             author: await resolveParticipant(r.authorId),
+            ...(await withLikeData(r.id, userId)),
           })),
         );
 
         return {
           ...comment,
           author,
-          replies: repliesWithAuthors,
+          replies: repliesWithDetails,
           replyCount,
+          ...likeData,
         };
       }),
     );
@@ -98,14 +115,18 @@ export async function POST(
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
-    // If replying, the parent must be a genuine TOP-LEVEL comment on this
-    // same post — enforces our one-level-deep nesting rule.
+    let parentComment = null;
+
     if (parentId) {
-      const parent = await prisma.comment.findUnique({
+      parentComment = await prisma.comment.findUnique({
         where: { id: parentId },
       });
 
-      if (!parent || parent.postId !== id || parent.parentId !== null) {
+      if (
+        !parentComment ||
+        parentComment.postId !== id ||
+        parentComment.parentId !== null
+      ) {
         return NextResponse.json(
           { error: "Invalid comment to reply to" },
           { status: 400 },
@@ -122,25 +143,41 @@ export async function POST(
       },
     });
 
+    // Notify the people who should know about this — avoiding duplicate/self notifications
+    const notifyTargets = new Set<string>();
+
     if (post.provider.clerkUserId !== userId) {
-      await prisma.notification.create({
-        data: {
-          userId: post.provider.clerkUserId,
-          type: "NEW_COMMENT",
-          title: parentId
-            ? "New reply on your post"
-            : "New comment on your post",
-          body: text.trim().slice(0, 100),
-          link: `/posts/${id}`,
-        },
-      });
+      notifyTargets.add(post.provider.clerkUserId);
     }
+
+    if (parentComment && parentComment.authorId !== userId) {
+      notifyTargets.add(parentComment.authorId);
+    }
+
+    await Promise.all(
+      Array.from(notifyTargets).map((targetUserId) =>
+        prisma.notification.create({
+          data: {
+            userId: targetUserId,
+            type: parentId ? "NEW_REPLY" : "NEW_COMMENT",
+            title:
+              parentId && parentComment?.authorId === targetUserId
+                ? "Someone replied to your comment"
+                : parentId
+                  ? "New reply on your post"
+                  : "New comment on your post",
+            body: text.trim().slice(0, 100),
+            link: `/posts/${id}`,
+          },
+        }),
+      ),
+    );
 
     const author = await resolveParticipant(userId);
 
     return NextResponse.json({
       success: true,
-      comment: { ...comment, author },
+      comment: { ...comment, author, likeCount: 0, isLikedByMe: false },
     });
   } catch (error) {
     console.error(error);
