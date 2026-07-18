@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Link, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { Trash2 } from "lucide-react";
 
 type Post = {
   id: string;
