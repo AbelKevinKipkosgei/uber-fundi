@@ -102,7 +102,11 @@ export default function PostsList({
           </div>
 
           <button
-            onClick={() => handleDelete(post.id)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleDelete(post.id);
+            }}
             disabled={deletingId === post.id}
             className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 shadow-sm flex items-center justify-center text-gray-500 hover:text-red-600 opacity-0 group-hover:opacity-100 transition disabled:opacity-60"
           >
