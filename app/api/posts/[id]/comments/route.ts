@@ -96,7 +96,7 @@ export async function POST(
 
   const { id } = await params;
   const body = await req.json();
-  const { text, parentId } = body;
+  const { text, parentId, mentionedUserId } = body;
 
   if (!text || typeof text !== "string" || !text.trim()) {
     return NextResponse.json(
@@ -144,28 +144,42 @@ export async function POST(
     });
 
     // Notify the people who should know about this — avoiding duplicate/self notifications
-    const notifyTargets = new Set<string>();
+    const notifyTargets = new Map<string, string>(); // userId -> notification title
 
     if (post.provider.clerkUserId !== userId) {
-      notifyTargets.add(post.provider.clerkUserId);
+      notifyTargets.set(
+        post.provider.clerkUserId,
+        parentId ? "New reply on your post" : "New comment on your post",
+      );
     }
 
     if (parentComment && parentComment.authorId !== userId) {
-      notifyTargets.add(parentComment.authorId);
+      notifyTargets.set(
+        parentComment.authorId,
+        "Someone replied to your comment",
+      );
+    }
+
+    // If this reply explicitly mentions someone (i.e. it's a reply-to-a-reply),
+    // validate they're actually a genuine reply author under this same parent
+    // before notifying them — prevents notifying an arbitrary user ID.
+    if (mentionedUserId && mentionedUserId !== userId && parentId) {
+      const mentionedIsRealReplyAuthor = await prisma.comment.findFirst({
+        where: { parentId, authorId: mentionedUserId },
+      });
+
+      if (mentionedIsRealReplyAuthor) {
+        notifyTargets.set(mentionedUserId, "Someone replied to your reply");
+      }
     }
 
     await Promise.all(
-      Array.from(notifyTargets).map((targetUserId) =>
+      Array.from(notifyTargets.entries()).map(([targetUserId, title]) =>
         prisma.notification.create({
           data: {
             userId: targetUserId,
             type: parentId ? "NEW_REPLY" : "NEW_COMMENT",
-            title:
-              parentId && parentComment?.authorId === targetUserId
-                ? "Someone replied to your comment"
-                : parentId
-                  ? "New reply on your post"
-                  : "New comment on your post",
+            title,
             body: text.trim().slice(0, 100),
             link: `/posts/${id}`,
           },
