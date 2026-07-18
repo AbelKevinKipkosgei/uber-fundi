@@ -111,11 +111,13 @@ function ReplyRow({
   reply,
   onDelete,
   onToggleLike,
+  onReply,
   currentUserId,
 }: {
   reply: Reply;
   onDelete: (id: string) => void;
   onToggleLike: (id: string) => void;
+  onReply: (authorName: string) => void;
   currentUserId: string | null | undefined;
 }) {
   return (
@@ -129,19 +131,28 @@ function ReplyRow({
           <span className="text-gray-400">{timeAgo(reply.createdAt)}</span>
         </p>
         <p className="text-sm text-gray-700">{reply.body}</p>
-        <button
-          onClick={() => onToggleLike(reply.id)}
-          className={`flex items-center gap-1 text-xs mt-1 transition-colors ${
-            reply.isLikedByMe
-              ? "text-red-500"
-              : "text-gray-400 hover:text-red-500"
-          }`}
-        >
-          <Heart
-            className={`w-3 h-3 ${reply.isLikedByMe ? "fill-red-500" : ""}`}
-          />
-          {reply.likeCount > 0 ? reply.likeCount : "Like"}
-        </button>
+        <div className="flex items-center gap-3 mt-1">
+          <button
+            onClick={() => onToggleLike(reply.id)}
+            className={`flex items-center gap-1 text-xs transition-colors ${
+              reply.isLikedByMe
+                ? "text-red-500"
+                : "text-gray-400 hover:text-red-500"
+            }`}
+          >
+            <Heart
+              className={`w-3 h-3 ${reply.isLikedByMe ? "fill-red-500" : ""}`}
+            />
+            {reply.likeCount > 0 ? reply.likeCount : "Like"}
+          </button>
+          <button
+            onClick={() => onReply(reply.author.name)}
+            className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600 transition-colors"
+          >
+            <CornerDownRight className="w-3 h-3" />
+            Reply
+          </button>
+        </div>
       </div>
       {reply.author.clerkUserId === currentUserId && (
         <button
@@ -314,6 +325,11 @@ export default function CommentSection({ postId }: { postId: string }) {
     }
   };
 
+  const handleReplyToReply = (parentId: string, authorName: string) => {
+    setReplyingTo(parentId);
+    setReplyDrafts((prev) => ({ ...prev, [parentId]: `@${authorName} ` }));
+  };
+
   const requestDelete = (id: string, isReply: boolean, parentId?: string) => {
     setPendingDelete({ id, isReply, parentId });
   };
@@ -471,6 +487,9 @@ export default function CommentSection({ postId }: { postId: string }) {
                       onDelete={(id) => requestDelete(id, true, comment.id)}
                       onToggleLike={(id) =>
                         toggleCommentLike(id, true, comment.id)
+                      }
+                      onReply={(authorName) =>
+                        handleReplyToReply(comment.id, authorName)
                       }
                     />
                   ))}
