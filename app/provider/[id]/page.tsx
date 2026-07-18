@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import RatingWidget from "@/components/RatingWidget";
 import { useUser } from "@clerk/nextjs";
+import { Heart, MessageCircle as CommentIcon } from "lucide-react";
 import {
   Phone,
   Star,
@@ -43,6 +44,8 @@ type Post = {
   title: string;
   description: string | null;
   images: string[];
+  likeCount: number;
+  commentCount: number;
   category: { name: string };
 };
 
@@ -295,6 +298,35 @@ export default function ProviderProfilePage() {
           ) : (
             <div className="grid sm:grid-cols-2 gap-4">
               {posts.map((post) => (
+                // <Link
+                //   key={post.id}
+                //   href={`/posts/${post.id}`}
+                //   className="block rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md transition"
+                // >
+                //   {post.images[0] ? (
+                //     // eslint-disable-next-line @next/next/no-img-element
+                //     <img
+                //       src={post.images[0]}
+                //       alt={post.title}
+                //       className="w-full h-40 object-cover"
+                //     />
+                //   ) : (
+                //     <div className="w-full h-40 bg-gray-50 flex items-center justify-center text-gray-300 text-sm">
+                //       No photo
+                //     </div>
+                //   )}
+                //   <div className="p-4">
+                //     <p className="font-medium text-gray-900">{post.title}</p>
+                //     <p className="text-xs text-gray-500 mt-0.5">
+                //       {post.category.name}
+                //     </p>
+                //     {post.description && (
+                //       <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                //         {post.description}
+                //       </p>
+                //     )}
+                //   </div>
+                // </Link>
                 <Link
                   key={post.id}
                   href={`/posts/${post.id}`}
@@ -322,6 +354,17 @@ export default function ProviderProfilePage() {
                         {post.description}
                       </p>
                     )}
+
+                    <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-50">
+                      <span className="flex items-center gap-1 text-xs text-gray-500">
+                        <Heart className="w-3.5 h-3.5" />
+                        {post.likeCount}
+                      </span>
+                      <span className="flex items-center gap-1 text-xs text-gray-500">
+                        <CommentIcon className="w-3.5 h-3.5" />
+                        {post.commentCount}
+                      </span>
+                    </div>
                   </div>
                 </Link>
               ))}
