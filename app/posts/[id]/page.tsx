@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, User } from "lucide-react";
+import LikeButton from "@/components/LikeButton";
+import CommentSection from "@/components/CommentSection";
 
 type Post = {
   id: string;
@@ -11,6 +13,8 @@ type Post = {
   description: string | null;
   images: string[];
   createdAt: string;
+  likeCount: number;
+  isLikedByMe: boolean;
   category: { name: string };
   provider: {
     id: number;
@@ -173,6 +177,13 @@ export default function PostDetailPage() {
             </span>
 
             <h1 className="text-2xl font-bold text-gray-900">{post.title}</h1>
+            <div className="mt-3">
+              <LikeButton
+                postId={post.id}
+                initialLiked={post.isLikedByMe}
+                initialCount={post.likeCount}
+              />
+            </div>
 
             {post.description && (
               <p className="mt-4 text-gray-700 leading-relaxed whitespace-pre-line">
