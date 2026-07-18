@@ -250,7 +250,7 @@ export default function CommentSection({ postId }: { postId: string }) {
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+    <div>
       <h2 className="text-lg font-semibold text-gray-900 mb-4">Comments</h2>
 
       <form onSubmit={handlePostComment} className="flex gap-2 mb-6">
