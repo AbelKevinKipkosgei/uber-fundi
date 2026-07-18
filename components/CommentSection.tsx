@@ -312,6 +312,8 @@ export default function CommentSection({ postId }: { postId: string }) {
     isReply: boolean,
     parentId?: string,
   ) => {
+    if (!confirm("Delete this comment?")) return;
+
     try {
       const res = await fetch(`/api/comments/${id}`, { method: "DELETE" });
       if (!res.ok) return;
