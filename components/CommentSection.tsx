@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { Trash2, CornerDownRight } from "lucide-react";
+import { Trash2, CornerDownRight, Heart } from "lucide-react";
 
 type Author = { clerkUserId: string; name: string; imageUrl: string | null };
 
@@ -12,6 +12,8 @@ type Reply = {
   body: string;
   createdAt: string;
   author: Author;
+  likeCount: number;
+  isLikedByMe: boolean;
 };
 
 type TopLevelComment = {
@@ -21,6 +23,8 @@ type TopLevelComment = {
   author: Author;
   replies: Reply[];
   replyCount: number;
+  likeCount: number;
+  isLikedByMe: boolean;
 };
 
 function timeAgo(dateStr: string) {
@@ -34,13 +38,82 @@ function timeAgo(dateStr: string) {
   return `${days}d`;
 }
 
+function useCommentLikeToggle(
+  setComments: React.Dispatch<React.SetStateAction<TopLevelComment[]>>,
+) {
+  return async (commentId: string, isReply: boolean, parentId?: string) => {
+    // Optimistic flip
+    setComments((prev) =>
+      prev.map((c) => {
+        if (!isReply && c.id === commentId) {
+          return {
+            ...c,
+            isLikedByMe: !c.isLikedByMe,
+            likeCount: c.isLikedByMe ? c.likeCount - 1 : c.likeCount + 1,
+          };
+        }
+        if (isReply && c.id === parentId) {
+          return {
+            ...c,
+            replies: c.replies.map((r) =>
+              r.id === commentId
+                ? {
+                    ...r,
+                    isLikedByMe: !r.isLikedByMe,
+                    likeCount: r.isLikedByMe
+                      ? r.likeCount - 1
+                      : r.likeCount + 1,
+                  }
+                : r,
+            ),
+          };
+        }
+        return c;
+      }),
+    );
+
+    try {
+      const res = await fetch(`/api/comments/${commentId}/like`, {
+        method: "POST",
+      });
+      if (!res.ok) throw new Error("failed");
+      const data = await res.json();
+
+      // Reconcile with server truth
+      setComments((prev) =>
+        prev.map((c) => {
+          if (!isReply && c.id === commentId) {
+            return { ...c, isLikedByMe: data.liked, likeCount: data.likeCount };
+          }
+          if (isReply && c.id === parentId) {
+            return {
+              ...c,
+              replies: c.replies.map((r) =>
+                r.id === commentId
+                  ? { ...r, isLikedByMe: data.liked, likeCount: data.likeCount }
+                  : r,
+              ),
+            };
+          }
+          return c;
+        }),
+      );
+    } catch (err) {
+      console.error(err);
+      // silently leave the optimistic state — acceptable for a low-stakes like toggle
+    }
+  };
+}
+
 function ReplyRow({
   reply,
   onDelete,
+  onToggleLike,
   currentUserId,
 }: {
   reply: Reply;
   onDelete: (id: string) => void;
+  onToggleLike: (id: string) => void;
   currentUserId: string | null | undefined;
 }) {
   return (
@@ -54,6 +127,19 @@ function ReplyRow({
           <span className="text-gray-400">{timeAgo(reply.createdAt)}</span>
         </p>
         <p className="text-sm text-gray-700">{reply.body}</p>
+        <button
+          onClick={() => onToggleLike(reply.id)}
+          className={`flex items-center gap-1 text-xs mt-1 transition-colors ${
+            reply.isLikedByMe
+              ? "text-red-500"
+              : "text-gray-400 hover:text-red-500"
+          }`}
+        >
+          <Heart
+            className={`w-3 h-3 ${reply.isLikedByMe ? "fill-red-500" : ""}`}
+          />
+          {reply.likeCount > 0 ? reply.likeCount : "Like"}
+        </button>
       </div>
       {reply.author.clerkUserId === currentUserId && (
         <button
@@ -89,6 +175,7 @@ export default function CommentSection({ postId }: { postId: string }) {
   const [replyCursors, setReplyCursors] = useState<
     Record<string, string | null>
   >({});
+  const toggleCommentLike = useCommentLikeToggle(setComments);
 
   const loadInitial = async () => {
     setLoading(true);
@@ -300,17 +387,32 @@ export default function CommentSection({ postId }: { postId: string }) {
                     </span>
                   </p>
                   <p className="text-sm text-gray-700 mt-0.5">{comment.body}</p>
-                  <button
-                    onClick={() =>
-                      setReplyingTo(
-                        replyingTo === comment.id ? null : comment.id,
-                      )
-                    }
-                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600 mt-1"
-                  >
-                    <CornerDownRight className="w-3 h-3" />
-                    Reply
-                  </button>
+                  <div className="flex items-center gap-3 mt-1">
+                    <button
+                      onClick={() => toggleCommentLike(comment.id, false)}
+                      className={`flex items-center gap-1 text-xs transition-colors ${
+                        comment.isLikedByMe
+                          ? "text-red-500"
+                          : "text-gray-500 hover:text-red-500"
+                      }`}
+                    >
+                      <Heart
+                        className={`w-3.5 h-3.5 ${comment.isLikedByMe ? "fill-red-500" : ""}`}
+                      />
+                      {comment.likeCount > 0 ? comment.likeCount : "Like"}
+                    </button>
+                    <button
+                      onClick={() =>
+                        setReplyingTo(
+                          replyingTo === comment.id ? null : comment.id,
+                        )
+                      }
+                      className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600"
+                    >
+                      <CornerDownRight className="w-3 h-3" />
+                      Reply
+                    </button>
+                  </div>
                 </div>
                 {comment.author.clerkUserId === user?.id && (
                   <button
@@ -357,6 +459,9 @@ export default function CommentSection({ postId }: { postId: string }) {
                       currentUserId={user?.id}
                       onDelete={(id) =>
                         handleDeleteComment(id, true, comment.id)
+                      }
+                      onToggleLike={(id) =>
+                        toggleCommentLike(id, true, comment.id)
                       }
                     />
                   ))}
