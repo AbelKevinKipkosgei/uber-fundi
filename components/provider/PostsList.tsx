@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Link, Trash2 } from "lucide-react";
 
 type Post = {
   id: string;
@@ -76,9 +76,10 @@ export default function PostsList({
   return (
     <div className="grid sm:grid-cols-2 gap-4">
       {posts.map((post) => (
-        <div
+        <Link
           key={post.id}
-          className="rounded-2xl border border-gray-100 overflow-hidden group relative"
+          href={`/provider/dashboard/posts/${post.id}`}
+          className="rounded-2xl border border-gray-100 overflow-hidden group relative block hover:shadow-md transition"
         >
           {post.images[0] ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -107,7 +108,7 @@ export default function PostsList({
           >
             <Trash2 className="w-4 h-4" />
           </button>
-        </div>
+        </Link>
       ))}
     </div>
   );
