@@ -32,7 +32,7 @@ export async function GET(
   try {
     const topLevel = await prisma.comment.findMany({
       where: { postId: id, parentId: null },
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: "desc" },
       take: COMMENTS_PAGE_SIZE + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     });
