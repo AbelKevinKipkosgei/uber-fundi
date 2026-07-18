@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import RatingWidget from "@/components/RatingWidget";
 import { useUser } from "@clerk/nextjs";
 import {
   Phone,
@@ -326,6 +327,15 @@ export default function ProviderProfilePage() {
               ))}
             </div>
           )}
+          <div className="mt-8">
+            <RatingWidget
+              providerId={provider.id}
+              isOwnProfile={provider.isOwnProfile}
+              onRatingUpdate={(newRating) =>
+                setProvider({ ...provider, rating: newRating })
+              }
+            />
+          </div>
         </div>
       </div>
     </div>
