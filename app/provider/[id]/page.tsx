@@ -294,9 +294,10 @@ export default function ProviderProfilePage() {
           ) : (
             <div className="grid sm:grid-cols-2 gap-4">
               {posts.map((post) => (
-                <div
+                <Link
                   key={post.id}
-                  className="rounded-2xl border border-gray-100 overflow-hidden"
+                  href={`/posts/${post.id}`}
+                  className="block rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md transition"
                 >
                   {post.images[0] ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -321,7 +322,7 @@ export default function ProviderProfilePage() {
                       </p>
                     )}
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}
