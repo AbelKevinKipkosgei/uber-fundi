@@ -164,3 +164,15 @@ model CommentLike {
   @@unique([commentId, userId])
   @@map("comment_likes")
 }
+
+model Report {
+  id             String   @id @default(cuid())
+  reporterId     String   @map("reporter_id")
+  reportedUserId String   @map("reported_user_id")
+  reason         String
+  details        String?
+  status         String   @default("PENDING")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@map("reports")
+}
