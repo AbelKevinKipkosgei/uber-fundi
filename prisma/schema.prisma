@@ -176,3 +176,38 @@ model Report {
 
   @@map("reports")
 }
+
+model Booking {
+  id          String   @id @default(cuid())
+  clientId    String   @map("client_id")
+  providerId  Int      @map("provider_id")
+  description String
+  amount      Int
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  provider    Provider  @relation(fields: [providerId], references: [id])
+  payments    Payment[]
+
+  @@map("bookings")
+}
+
+model Payment {
+  id                String   @id @default(cuid())
+  bookingId         String   @map("booking_id")
+  phone             String
+  amount            Int
+  status            String   @default("PENDING")
+  merchantRequestId String?  @map("merchant_request_id")
+  checkoutRequestId String?  @unique @map("checkout_request_id")
+  mpesaReceiptNumber String? @map("mpesa_receipt_number")
+  resultCode        Int?     @map("result_code")
+  resultDesc        String?  @map("result_desc")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  booking           Booking  @relation(fields: [bookingId], references: [id])
+
+  @@map("payments")
+}
