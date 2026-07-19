@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import RatingWidget from "@/components/RatingWidget";
 import { useUser } from "@clerk/nextjs";
 import { Heart, MessageCircle as CommentIcon } from "lucide-react";
+import ReportModal from "@/components/ReportModal";
 import {
   Phone,
   Star,
@@ -22,6 +23,7 @@ import {
   Sofa,
   Tv,
   Layers,
+  Flag,
 } from "lucide-react";
 
 type Subcategory = { id: string; name: string; slug: string };
@@ -98,6 +100,7 @@ export default function ProviderProfilePage() {
   const router = useRouter();
   const { user } = useUser();
   const [startingChat, setStartingChat] = useState(false);
+  const [showReport, setShowReport] = useState(false);
 
   const handleMessage = async () => {
     setStartingChat(true);
@@ -211,6 +214,15 @@ export default function ProviderProfilePage() {
                     <BadgeCheck className="w-3.5 h-3.5" />
                     Available
                   </span>
+                )}
+                {!provider.isOwnProfile && (
+                  <button
+                    onClick={() => setShowReport(true)}
+                    className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-red-500 transition"
+                  >
+                    <Flag className="w-3.5 h-3.5" />
+                    Report
+                  </button>
                 )}
               </div>
 
@@ -381,6 +393,12 @@ export default function ProviderProfilePage() {
           </div>
         </div>
       </div>
+      {showReport && (
+        <ReportModal
+          target={{ providerId: provider.id }}
+          onClose={() => setShowReport(false)}
+        />
+      )}
     </div>
   );
 }
