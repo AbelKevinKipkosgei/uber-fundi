@@ -72,7 +72,7 @@ export async function GET(req: Request) {
           ) AS distance
         FROM providers p
         JOIN categories c ON c.id = p.category_id
-        WHERE p.is_available = true
+        WHERE p.is_available = true AND p.suspended = false
       ) sub
       WHERE distance <= ${radiusKm}
       ORDER BY distance ASC

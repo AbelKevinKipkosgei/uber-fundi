@@ -40,6 +40,7 @@ export async function GET(
     const providers = await prisma.provider.findMany({
       where: {
         categoryId: category.id,
+        suspended: false,
         ...(subcategoryId
           ? { subcategories: { some: { categoryId: subcategoryId } } }
           : {}),
