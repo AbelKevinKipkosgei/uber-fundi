@@ -24,6 +24,7 @@ model Provider {
   subcategories ProviderSubcategory[]
   posts         Post[]
   reviews       Review[]
+  suspended     Boolean             @default(false) @map("suspended")
 
   @@map("providers")
 }
