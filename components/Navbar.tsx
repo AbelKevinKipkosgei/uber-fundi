@@ -7,11 +7,13 @@ import {
   WrenchScrewdriverIcon as WrenchOutline,
   Squares2X2Icon as DashboardOutline,
   ChatBubbleLeftRightIcon as ChatOutline,
+  ShieldCheckIcon as ShieldOutline,
 } from "@heroicons/react/24/outline";
 import {
   WrenchScrewdriverIcon as WrenchSolid,
   Squares2X2Icon as DashboardSolid,
   ChatBubbleLeftRightIcon as ChatSolid,
+  ShieldCheckIcon as ShieldSolid,
 } from "@heroicons/react/24/solid";
 import NotificationBell from "@/components/NotificationBell";
 import { useEffect, useState } from "react";
@@ -54,7 +56,8 @@ function NavLink({
 }
 
 export default function Navbar() {
-  const { isSignedIn, isLoaded } = useUser();
+  const { isSignedIn, isLoaded, user } = useUser();
+  const isAdminUser = user?.publicMetadata?.role === "admin";
   const pathname = usePathname();
   const [hasProviderProfile, setHasProviderProfile] = useState<boolean | null>(
     null,
@@ -124,6 +127,15 @@ export default function Navbar() {
         </Link>
 
         <div className="hidden md:flex items-center gap-6 text-sm">
+          {isAdminUser && (
+            <NavLink
+              href="/admin"
+              active={pathname.startsWith("/admin")}
+              outlineIcon={ShieldOutline}
+              solidIcon={ShieldSolid}
+              label="Admin"
+            />
+          )}
           <NavLink
             href="/providers"
             active={pathname.startsWith("/providers")}
