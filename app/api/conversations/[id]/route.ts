@@ -40,9 +40,21 @@ export async function GET(
         ? conversation.participantBId
         : conversation.participantAId;
 
-    const otherParticipant = await resolveParticipant(otherUserId);
+    const [otherParticipant, otherAsProvider] = await Promise.all([
+      resolveParticipant(otherUserId),
+      prisma.provider.findUnique({
+        where: { clerkUserId: otherUserId },
+        select: { id: true },
+      }),
+    ]);
 
-    return NextResponse.json({ id: conversation.id, otherParticipant });
+    return NextResponse.json({
+      id: conversation.id,
+      otherParticipant: {
+        ...otherParticipant,
+        providerId: otherAsProvider?.id ?? null,
+      },
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json(

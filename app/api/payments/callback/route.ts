@@ -46,29 +46,15 @@ export async function POST(req: Request) {
     });
 
     if (succeeded) {
-      const booking = await prisma.booking.update({
+      await prisma.booking.update({
         where: { id: payment.bookingId },
-        data: { status: "PAID" },
-        include: { provider: true },
-      });
-
-      await prisma.notification.create({
-        data: {
-          userId: booking.provider.clerkUserId,
-          type: "BOOKING_PAID",
-          title: "Payment received",
-          body: `KES ${booking.amount} for: ${booking.description.slice(0, 60)}`,
-          link: `/bookings/${booking.id}`,
-        },
+        data: { status: "PAID", clientSeen: true, providerSeen: false },
       });
     }
 
-    // Safaricom expects exactly this shape back, regardless of outcome
     return NextResponse.json({ ResultCode: 0, ResultDesc: "Accepted" });
   } catch (error) {
     console.error(error);
-    // Still return a 200-style acknowledgment shape — returning an error
-    // here can cause Safaricom to retry indefinitely
     return NextResponse.json({ ResultCode: 0, ResultDesc: "Accepted" });
   }
 }
