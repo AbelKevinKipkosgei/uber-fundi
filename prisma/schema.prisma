@@ -25,6 +25,7 @@ model Provider {
   posts         Post[]
   reviews       Review[]
   suspended     Boolean             @default(false) @map("suspended")
+  bookings      Booking[]
 
   @@map("providers")
 }
