@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+const PAGE_SIZE = 12;
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ category: string }> },
@@ -9,6 +11,7 @@ export async function GET(
     const { category: slug } = await params;
     const { searchParams } = new URL(req.url);
     const subSlug = searchParams.get("sub");
+    const cursor = searchParams.get("cursor");
 
     const category = await prisma.category.findUnique({ where: { slug } });
 
@@ -26,7 +29,6 @@ export async function GET(
         where: { slug: subSlug },
       });
 
-      // Guard against a subcategory slug that doesn't actually belong to this category
       if (!subcategory || subcategory.parentId !== category.id) {
         return NextResponse.json(
           { error: "Invalid subcategory for this category" },
@@ -50,12 +52,19 @@ export async function GET(
         subcategories: { include: { category: true } },
       },
       orderBy: [{ rating: "desc" }, { createdAt: "desc" }],
+      take: PAGE_SIZE + 1,
+      ...(cursor ? { cursor: { id: parseInt(cursor, 10) }, skip: 1 } : {}),
     });
 
-    return NextResponse.json(providers);
+    const hasMore = providers.length > PAGE_SIZE;
+    const page = hasMore ? providers.slice(0, PAGE_SIZE) : providers;
+
+    return NextResponse.json({
+      providers: page,
+      nextCursor: hasMore ? page[page.length - 1].id : null,
+    });
   } catch (error) {
     console.error(error);
-
     return NextResponse.json(
       { error: "Failed to fetch providers" },
       { status: 500 },
