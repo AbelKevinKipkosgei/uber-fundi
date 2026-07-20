@@ -91,3 +91,32 @@ export async function initiateStkPush({
     CustomerMessage: string;
   };
 }
+
+// Fallback query function to be used in production
+export async function queryStkPushStatus(checkoutRequestId: string) {
+  const accessToken = await getMpesaAccessToken();
+  const timestamp = getTimestamp();
+  const password = Buffer.from(
+    `${process.env.MPESA_SHORTCODE}${process.env.MPESA_PASSKEY}${timestamp}`,
+  ).toString("base64");
+
+  const res = await fetch(`${BASE_URL}/mpesa/stkpushquery/v1/query`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      BusinessShortCode: process.env.MPESA_SHORTCODE,
+      Password: password,
+      Timestamp: timestamp,
+      CheckoutRequestID: checkoutRequestId,
+    }),
+  });
+
+  return res.json() as Promise<{
+    ResponseCode: string;
+    ResultCode: string;
+    ResultDesc: string;
+  }>;
+}
