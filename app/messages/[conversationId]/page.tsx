@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Send, Check, CheckCheck, Flag } from "lucide-react";
-import { pusherClient } from "@/lib/pusherClient";
+import { getPusherClient } from "@/lib/pusherClient";
 import ReportModal from "@/components/ReportModal";
 import { Briefcase } from "lucide-react";
 import CreateBookingModal from "@/components/CreateBookingModal";
@@ -79,8 +79,9 @@ export default function ConversationThreadPage() {
 
   // Real-time subscription
   useEffect(() => {
+    const client = getPusherClient();
     const channelName = `private-conversation-${params.conversationId}`;
-    const channel = pusherClient.subscribe(channelName);
+    const channel = client.subscribe(channelName);
 
     channel.bind("new-message", (message: Message) => {
       setMessages((prev) => {
@@ -110,7 +111,7 @@ export default function ConversationThreadPage() {
     );
 
     return () => {
-      pusherClient.unsubscribe(channelName);
+      client.unsubscribe(channelName);
     };
   }, [params.conversationId, user?.id]);
 
