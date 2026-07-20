@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import {
   ArrowLeft,
   Smartphone,
@@ -21,7 +22,11 @@ type Booking = {
   isProvider: boolean;
   provider: { id: number; name: string };
   client: { name: string };
-  payments: { status: string; mpesaReceiptNumber: string | null }[];
+  payments: {
+    status: string;
+    mpesaReceiptNumber: string | null;
+    resultDesc: string | null;
+  }[];
 };
 
 const POLL_INTERVAL_MS = 3000;
@@ -41,6 +46,8 @@ export default function BookingDetailPage() {
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const [phone, setPhone] = useState("");
+
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -95,7 +102,14 @@ export default function BookingDetailPage() {
 
       pollRef.current = setInterval(async () => {
         const updated = await fetchBooking();
-        if (updated && updated.status !== "PENDING") {
+
+        if (!updated) return;
+
+        const latestPayment = updated.payments[updated.payments.length - 1];
+        const paymentSettled =
+          updated.status !== "PENDING" || latestPayment?.status === "FAILED";
+
+        if (paymentSettled) {
           if (pollRef.current) clearInterval(pollRef.current);
           if (timeoutRef.current) clearTimeout(timeoutRef.current);
           setWaitingForPin(false);
@@ -131,7 +145,6 @@ export default function BookingDetailPage() {
   };
 
   const handleCancel = async () => {
-    if (!confirm("Cancel this booking?")) return;
     setUpdatingStatus(true);
     try {
       const res = await fetch(`/api/bookings/${params.id}`, {
@@ -215,9 +228,15 @@ export default function BookingDetailPage() {
           </div>
 
           {latestPayment?.mpesaReceiptNumber && (
-            <p className="mt-3 text-sm text-green-700 bg-green-50 rounded-xl px-3 py-2">
-              Paid — M-Pesa receipt: {latestPayment.mpesaReceiptNumber}
-            </p>
+            <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-green-50 border border-green-200 p-3.5 text-green-700">
+              <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-sm">Payment received</p>
+                <p className="text-xs text-green-600 mt-0.5">
+                  M-Pesa receipt: {latestPayment.mpesaReceiptNumber}
+                </p>
+              </div>
+            </div>
           )}
 
           {payError && (
@@ -225,6 +244,24 @@ export default function BookingDetailPage() {
               {payError}
             </p>
           )}
+
+          {!waitingForPin &&
+            latestPayment?.status === "FAILED" &&
+            booking.status === "PENDING" && (
+              <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-red-50 border border-red-200 p-3.5 text-red-700">
+                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium text-sm">
+                    Payment didn&apos;t go through
+                  </p>
+                  <p className="text-xs text-red-600 mt-0.5">
+                    {latestPayment.resultDesc ??
+                      "The transaction was not completed."}{" "}
+                    You can try again below.
+                  </p>
+                </div>
+              </div>
+            )}
 
           {waitingForPin && (
             <div className="mt-4 flex items-center gap-2 text-sm text-blue-700 bg-blue-50 rounded-xl px-3 py-2.5">
@@ -262,7 +299,7 @@ export default function BookingDetailPage() {
                     {payingNow ? "Sending..." : "Pay with M-Pesa"}
                   </button>
                   <button
-                    onClick={handleCancel}
+                    onClick={() => setShowCancelConfirm(true)}
                     disabled={updatingStatus}
                     className="px-4 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition disabled:opacity-60"
                   >
@@ -296,6 +333,18 @@ export default function BookingDetailPage() {
           )}
         </div>
       </div>
+      {showCancelConfirm && (
+        <ConfirmDialog
+          title="Cancel this booking?"
+          message="This can't be undone. You'll need to create a new booking if you change your mind."
+          confirmLabel="Cancel Booking"
+          onConfirm={() => {
+            setShowCancelConfirm(false);
+            handleCancel();
+          }}
+          onCancel={() => setShowCancelConfirm(false)}
+        />
+      )}
     </div>
   );
 }
