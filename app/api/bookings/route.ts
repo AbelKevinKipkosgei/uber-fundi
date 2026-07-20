@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { resolveParticipant } from "@/lib/resolveParticipant";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
@@ -21,11 +22,30 @@ export async function GET() {
           ...(myProvider ? [{ providerId: myProvider.id }] : []),
         ],
       },
-      include: { provider: true, payments: true },
+      include: { provider: true },
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json(bookings);
+    const withRoles = await Promise.all(
+      bookings.map(async (b) => {
+        const isClient = b.clientId === userId;
+        const client = await resolveParticipant(b.clientId);
+
+        return {
+          id: b.id,
+          description: b.description,
+          amount: b.amount,
+          status: b.status,
+          createdAt: b.createdAt,
+          role: isClient ? "CLIENT" : "PROVIDER",
+          seen: isClient ? b.clientSeen : b.providerSeen,
+          provider: { id: b.provider.id, name: b.provider.name },
+          client,
+        };
+      }),
+    );
+
+    return NextResponse.json(withRoles);
   } catch (error) {
     console.error(error);
     return NextResponse.json(
@@ -72,18 +92,15 @@ export async function POST(req: Request) {
     }
 
     const booking = await prisma.booking.create({
-      data: { clientId: userId, providerId, description, amount },
-      include: { provider: true },
-    });
-
-    await prisma.notification.create({
       data: {
-        userId: provider.clerkUserId,
-        type: "NEW_BOOKING",
-        title: "New booking request",
-        body: `${description.slice(0, 80)} — KES ${amount}`,
-        link: `/bookings/${booking.id}`,
+        clientId: userId,
+        providerId,
+        description,
+        amount,
+        clientSeen: true,
+        providerSeen: false,
       },
+      include: { provider: true },
     });
 
     return NextResponse.json({ success: true, booking });
