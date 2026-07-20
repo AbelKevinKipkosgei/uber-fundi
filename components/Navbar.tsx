@@ -8,12 +8,14 @@ import {
   Squares2X2Icon as DashboardOutline,
   ChatBubbleLeftRightIcon as ChatOutline,
   ShieldCheckIcon as ShieldOutline,
+  BriefcaseIcon as BriefcaseOutline,
 } from "@heroicons/react/24/outline";
 import {
   WrenchScrewdriverIcon as WrenchSolid,
   Squares2X2Icon as DashboardSolid,
   ChatBubbleLeftRightIcon as ChatSolid,
   ShieldCheckIcon as ShieldSolid,
+  BriefcaseIcon as BriefcaseSolid,
 } from "@heroicons/react/24/solid";
 import NotificationBell from "@/components/NotificationBell";
 import { useEffect, useState } from "react";
@@ -64,6 +66,8 @@ export default function Navbar() {
   );
   const [unreadCount, setUnreadCount] = useState(0);
 
+  const [unreadBookings, setUnreadBookings] = useState(0);
+
   useEffect(() => {
     if (!isSignedIn) {
       setHasProviderProfile(null);
@@ -85,6 +89,35 @@ export default function Navbar() {
 
     return () => {
       cancelled = true;
+    };
+  }, [isSignedIn]);
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      setUnreadBookings(0);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchUnread = async () => {
+      try {
+        const res = await fetch("/api/bookings/unread-count");
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled) setUnreadBookings(data.count ?? 0);
+        }
+      } catch {
+        // silent fail
+      }
+    };
+
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 15000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
     };
   }, [isSignedIn]);
 
@@ -143,6 +176,16 @@ export default function Navbar() {
             solidIcon={WrenchSolid}
             label="Services"
           />
+          {isSignedIn && (
+            <NavLink
+              href="/bookings"
+              active={pathname.startsWith("/bookings")}
+              outlineIcon={BriefcaseOutline}
+              solidIcon={BriefcaseSolid}
+              label="Bookings"
+              badge={unreadBookings}
+            />
+          )}
           {isSignedIn && (
             <NavLink
               href="/provider/dashboard"
