@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { resolveParticipant } from "@/lib/resolveParticipant";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { parseBody } from "@/lib/validate";
+import { createReviewSchema } from "@/lib/schemas";
 
 export async function GET(
   req: Request,
@@ -55,14 +57,10 @@ export async function POST(
   }
 
   const body = await req.json();
-  const { rating, comment } = body;
 
-  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-    return NextResponse.json(
-      { error: "Rating must be a whole number between 1 and 5" },
-      { status: 400 },
-    );
-  }
+  const parsed = await parseBody(req, createReviewSchema);
+  if ("error" in parsed) return parsed.error;
+  const { rating, comment } = parsed.data;
 
   try {
     const provider = await prisma.provider.findUnique({

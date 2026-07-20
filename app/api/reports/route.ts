@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { parseBody } from "@/lib/validate";
+import { createReportSchema } from "@/lib/schemas";
 
 const VALID_REASONS = [
   "SPAM",
@@ -17,15 +19,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await req.json();
-  const { providerId, conversationId, reason, details } = body;
-
-  if (!reason || !VALID_REASONS.includes(reason)) {
-    return NextResponse.json(
-      { error: "Invalid report reason" },
-      { status: 400 },
-    );
-  }
+  const parsed = await parseBody(req, createReportSchema);
+  if ("error" in parsed) return parsed.error;
+  const { providerId, conversationId, reason, details } = parsed.data;
 
   if (!providerId && !conversationId) {
     return NextResponse.json(

@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { resolveParticipant } from "@/lib/resolveParticipant";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { parseBody } from "@/lib/validate";
+import { updateBookingSchema } from "@/lib/schemas";
 
 async function assertParty(bookingId: string, userId: string) {
   const booking = await prisma.booking.findUnique({
@@ -77,8 +79,9 @@ export async function PATCH(
   }
 
   const { id } = await params;
-  const body = await req.json();
-  const { status } = body;
+  const parsed = await parseBody(req, updateBookingSchema);
+  if ("error" in parsed) return parsed.error;
+  const { status } = parsed.data;
 
   const VALID_TRANSITIONS: Record<string, string[]> = {
     PENDING: ["CANCELLED"],

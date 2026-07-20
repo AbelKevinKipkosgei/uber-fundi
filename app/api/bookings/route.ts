@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { resolveParticipant } from "@/lib/resolveParticipant";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { parseBody } from "@/lib/validate";
+import { createBookingSchema } from "@/lib/schemas";
 
 export async function GET() {
   const { userId } = await auth();
@@ -62,15 +64,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await req.json();
-  const { providerId, description, amount } = body;
-
-  if (!providerId || !description || !Number.isInteger(amount) || amount <= 0) {
-    return NextResponse.json(
-      { error: "Missing or invalid fields" },
-      { status: 400 },
-    );
-  }
+  const parsed = await parseBody(req, createBookingSchema);
+  if ("error" in parsed) return parsed.error;
+  const { providerId, description, amount } = parsed.data;
 
   try {
     const provider = await prisma.provider.findUnique({
