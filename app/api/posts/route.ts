@@ -2,6 +2,8 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { parseBody } from "@/lib/validate";
+import { createPostSchema } from "@/lib/schemas";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -47,15 +49,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await req.json();
-  const { title, description, categoryId, images } = body;
-
-  if (!title || !categoryId) {
-    return NextResponse.json(
-      { error: "Title and category are required" },
-      { status: 400 },
-    );
-  }
+  const parsed = await parseBody(req, createPostSchema);
+  if ("error" in parsed) return parsed.error;
+  const { title, description, categoryId, images } = parsed.data;
 
   try {
     const provider = await prisma.provider.findUnique({

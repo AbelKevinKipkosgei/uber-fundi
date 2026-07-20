@@ -2,6 +2,8 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { parseBody } from "@/lib/validate";
+import { updateProviderSchema } from "@/lib/schemas";
 
 export async function GET() {
   const { userId } = await auth();
@@ -43,8 +45,9 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await req.json();
-  const { name, phone, bio, isAvailable, subcategoryIds } = body;
+  const parsed = await parseBody(req, updateProviderSchema);
+  if ("error" in parsed) return parsed.error;
+  const { name, phone, bio, isAvailable, subcategoryIds } = parsed.data;
 
   try {
     const existing = await prisma.provider.findUnique({

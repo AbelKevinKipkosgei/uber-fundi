@@ -1,44 +1,8 @@
-// import { sql } from "@/lib/db";
-// import { auth } from "@clerk/nextjs/server";
-
-// export async function POST(req: Request) {
-//   const { userId } = await auth();
-
-//   if (!userId) {
-//     return Response.json({ error: "Unauthorized" }, { status: 401 });
-//   }
-
-//   const body = await req.json();
-
-//   await sql`
-//     INSERT INTO providers (
-//       clerk_user_id,
-//       name,
-//       service,
-//       phone,
-//       latitude,
-//       longitude
-//     )
-//     VALUES (
-//       ${userId},
-//       ${body.name},
-//       ${body.service},
-//       ${body.phone},
-//       ${body.latitude},
-//       ${body.longitude}
-//     )
-//   `;
-
-//   return Response.json({
-//     success: true,
-//   });
-// }
-// app/api/providers/route.ts
-
-// app/api/providers/route.ts
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { parseBody } from "@/lib/validate";
+import { createProviderSchema } from "@/lib/schemas";
 
 export async function POST(req: Request) {
   const { userId } = await auth();
@@ -47,16 +11,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await req.json();
+  const parsed = await parseBody(req, createProviderSchema);
+  if ("error" in parsed) return parsed.error;
   const { name, phone, bio, categoryId, subcategoryIds, latitude, longitude } =
-    body;
-
-  if (!name || !phone || !categoryId || latitude == null || longitude == null) {
-    return NextResponse.json(
-      { error: "Missing required fields" },
-      { status: 400 },
-    );
-  }
+    parsed.data;
 
   // Ensure the chosen category is actually a top-level (main) category,
   // not a subcategory being mistakenly used as the main one.

@@ -6,6 +6,8 @@ import {
   COMMENTS_PAGE_SIZE,
   REPLIES_PREVIEW_SIZE,
 } from "@/lib/commentPagination";
+import { parseBody } from "@/lib/validate";
+import { postCommentSchema } from "@/lib/schemas";
 
 async function withLikeData(commentId: string, userId: string | null) {
   const [likeCount, isLikedByMe] = await Promise.all([
@@ -95,15 +97,9 @@ export async function POST(
   }
 
   const { id } = await params;
-  const body = await req.json();
-  const { text, parentId, mentionedUserId } = body;
-
-  if (!text || typeof text !== "string" || !text.trim()) {
-    return NextResponse.json(
-      { error: "Comment cannot be empty" },
-      { status: 400 },
-    );
-  }
+  const parsed = await parseBody(req, postCommentSchema);
+  if ("error" in parsed) return parsed.error;
+  const { text, parentId, mentionedUserId } = parsed.data;
 
   try {
     const post = await prisma.post.findUnique({

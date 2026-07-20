@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { parseBody } from "@/lib/validate";
+import { updatePostSchema } from "@/lib/schemas";
 
 export async function GET(
   req: Request,
@@ -98,8 +100,9 @@ export async function PATCH(
   }
 
   const { id } = await params;
-  const body = await req.json();
-  const { title, description, categoryId, images } = body;
+  const parsed = await parseBody(req, updatePostSchema);
+  if ("error" in parsed) return parsed.error;
+  const { title, description, categoryId, images } = parsed.data;
 
   try {
     const existing = await prisma.post.findUnique({
