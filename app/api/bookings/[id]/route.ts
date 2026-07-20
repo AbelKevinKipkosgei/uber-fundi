@@ -41,6 +41,19 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    if (isClient && !booking.clientSeen) {
+      await prisma.booking.update({
+        where: { id },
+        data: { clientSeen: true },
+      });
+    }
+    if (isProvider && !booking.providerSeen) {
+      await prisma.booking.update({
+        where: { id },
+        data: { providerSeen: true },
+      });
+    }
+
     const client = await resolveParticipant(booking.clientId);
 
     return NextResponse.json({ ...booking, client, isClient, isProvider });
@@ -83,8 +96,6 @@ export async function PATCH(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Only the CLIENT can mark a job complete (they're confirming the work
-    // was actually done); either party can cancel before payment.
     if (status === "COMPLETED" && !isClient) {
       return NextResponse.json(
         { error: "Only the client can mark a booking complete" },
@@ -103,22 +114,10 @@ export async function PATCH(
 
     const updated = await prisma.booking.update({
       where: { id },
-      data: { status },
-    });
-
-    const notifyUserId = isClient
-      ? booking.provider.clerkUserId
-      : booking.clientId;
-    await prisma.notification.create({
       data: {
-        userId: notifyUserId,
-        type: "BOOKING_UPDATED",
-        title:
-          status === "COMPLETED"
-            ? "Booking marked complete"
-            : "Booking cancelled",
-        body: booking.description.slice(0, 100),
-        link: `/bookings/${id}`,
+        status,
+        clientSeen: isClient,
+        providerSeen: isProvider,
       },
     });
 
