@@ -116,8 +116,37 @@ export default function BookingDetailPage() {
         }
       }, POLL_INTERVAL_MS);
 
-      timeoutRef.current = setTimeout(() => {
+      timeoutRef.current = setTimeout(async () => {
         if (pollRef.current) clearInterval(pollRef.current);
+
+        const latest = await fetchBooking();
+        const stillPendingPayment =
+          latest?.payments[latest.payments.length - 1]?.status === "PENDING";
+
+        if (stillPendingPayment) {
+          const paymentId = latest?.payments[latest.payments.length - 1]
+            ? (
+                latest.payments[latest.payments.length - 1] as unknown as {
+                  id: string;
+                }
+              ).id
+            : null;
+
+          // We don't currently expose payment.id in the Booking type — add it
+          // below — but if it's available, make one last direct check with
+          // Safaricom before giving up entirely.
+          if (paymentId) {
+            try {
+              await fetch(`/api/payments/${paymentId}/query`, {
+                method: "POST",
+              });
+              await fetchBooking();
+            } catch (err) {
+              console.error(err);
+            }
+          }
+        }
+
         setWaitingForPin(false);
       }, POLL_TIMEOUT_MS);
     } catch (err) {
