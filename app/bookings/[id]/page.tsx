@@ -40,6 +40,8 @@ export default function BookingDetailPage() {
 
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
+  const [phone, setPhone] = useState("");
+
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -79,7 +81,7 @@ export default function BookingDetailPage() {
       const res = await fetch("/api/payments/stk-push", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookingId: params.id }),
+        body: JSON.stringify({ bookingId: params.id, phone }),
       });
 
       const data = await res.json().catch(() => null);
@@ -234,22 +236,39 @@ export default function BookingDetailPage() {
           {booking.isClient &&
             booking.status === "PENDING" &&
             !waitingForPin && (
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={handlePay}
-                  disabled={payingNow}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-green-600 text-white py-3 font-medium hover:bg-green-700 transition disabled:opacity-60"
-                >
-                  <Smartphone className="w-5 h-5" />
-                  {payingNow ? "Sending..." : "Pay with M-Pesa"}
-                </button>
-                <button
-                  onClick={handleCancel}
-                  disabled={updatingStatus}
-                  className="px-4 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition disabled:opacity-60"
-                >
-                  Cancel
-                </button>
+              <div className="mt-6">
+                <label className="text-sm text-gray-600">
+                  M-Pesa phone number
+                </label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="e.g. 0712345678"
+                  required
+                  className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition text-gray-700"
+                />
+                <p className="text-xs text-gray-400 mt-1.5 mb-3">
+                  In sandbox mode, the payment prompt always goes to Safaricom's
+                  test number, not the number entered here.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handlePay}
+                    disabled={payingNow || !phone.trim()}
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-green-600 text-white py-3 font-medium hover:bg-green-700 transition disabled:opacity-60"
+                  >
+                    <Smartphone className="w-5 h-5" />
+                    {payingNow ? "Sending..." : "Pay with M-Pesa"}
+                  </button>
+                  <button
+                    onClick={handleCancel}
+                    disabled={updatingStatus}
+                    className="px-4 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition disabled:opacity-60"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             )}
 
