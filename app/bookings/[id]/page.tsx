@@ -23,6 +23,7 @@ type Booking = {
   provider: { id: number; name: string };
   client: { name: string };
   payments: {
+    id: string;
     status: string;
     mpesaReceiptNumber: string | null;
     resultDesc: string | null;
@@ -120,30 +121,16 @@ export default function BookingDetailPage() {
         if (pollRef.current) clearInterval(pollRef.current);
 
         const latest = await fetchBooking();
-        const stillPendingPayment =
-          latest?.payments[latest.payments.length - 1]?.status === "PENDING";
+        const latestPayment = latest?.payments[latest.payments.length - 1];
 
-        if (stillPendingPayment) {
-          const paymentId = latest?.payments[latest.payments.length - 1]
-            ? (
-                latest.payments[latest.payments.length - 1] as unknown as {
-                  id: string;
-                }
-              ).id
-            : null;
-
-          // We don't currently expose payment.id in the Booking type — add it
-          // below — but if it's available, make one last direct check with
-          // Safaricom before giving up entirely.
-          if (paymentId) {
-            try {
-              await fetch(`/api/payments/${paymentId}/query`, {
-                method: "POST",
-              });
-              await fetchBooking();
-            } catch (err) {
-              console.error(err);
-            }
+        if (latestPayment?.status === "PENDING") {
+          try {
+            await fetch(`/api/payments/${latestPayment.id}/query`, {
+              method: "POST",
+            });
+            await fetchBooking();
+          } catch (err) {
+            console.error(err);
           }
         }
 
