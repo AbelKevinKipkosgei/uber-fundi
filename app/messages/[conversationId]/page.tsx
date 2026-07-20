@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Send, Check, CheckCheck, Flag } from "lucide-react";
 import { pusherClient } from "@/lib/pusherClient";
 import ReportModal from "@/components/ReportModal";
+import { Briefcase } from "lucide-react";
+import CreateBookingModal from "@/components/CreateBookingModal";
 
 type Message = {
   id: string;
@@ -21,6 +23,7 @@ type OtherParticipant = {
   clerkUserId: string;
   name: string;
   imageUrl: string | null;
+  providerId: number | null;
 };
 
 export default function ConversationThreadPage() {
@@ -39,6 +42,8 @@ export default function ConversationThreadPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const [showReport, setShowReport] = useState(false);
+
+  const [showBookingModal, setShowBookingModal] = useState(false);
 
   // Initial load: conversation header + message history (GET also marks unread as read)
   useEffect(() => {
@@ -167,6 +172,15 @@ export default function ConversationThreadPage() {
             <p className="font-medium text-gray-900 flex-1">
               {otherParticipant?.name ?? "Loading..."}
             </p>
+            {otherParticipant?.providerId && (
+              <button
+                onClick={() => setShowBookingModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 transition"
+              >
+                <Briefcase className="w-3.5 h-3.5" />
+                Book
+              </button>
+            )}
             <button
               onClick={() => setShowReport(true)}
               className="text-xs text-gray-400 hover:text-red-500 transition"
@@ -174,6 +188,14 @@ export default function ConversationThreadPage() {
               <Flag className="w-4 h-4" />
             </button>
           </div>
+
+          {showBookingModal && otherParticipant?.providerId && (
+            <CreateBookingModal
+              providerId={otherParticipant.providerId}
+              providerName={otherParticipant.name}
+              onClose={() => setShowBookingModal(false)}
+            />
+          )}
 
           {showReport && (
             <ReportModal
