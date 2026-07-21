@@ -12,14 +12,14 @@ export async function resolveParticipant(
 ): Promise<ParticipantDisplay> {
   const provider = await prisma.provider.findUnique({
     where: { clerkUserId: targetClerkUserId },
-    select: { name: true },
+    select: { name: true, imageUrl: true },
   });
 
   if (provider) {
     return {
       clerkUserId: targetClerkUserId,
       name: provider.name,
-      imageUrl: null,
+      imageUrl: provider.imageUrl,
     };
   }
 
