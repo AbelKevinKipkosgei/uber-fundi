@@ -49,21 +49,47 @@ function NavLink({
   label: string;
   badge?: number;
 }) {
-  const Icon = active ? SolidIcon : OutlineIcon;
-
   return (
     <Link
       href={href}
-      className={`relative flex flex-col items-center gap-0.5 transition-colors ${
+      className={`group relative flex flex-col items-center gap-0.5 transition-colors duration-200 ${
         active
           ? "text-gray-600 font-medium"
-          : "text-gray-600 hover:text-blue-600"
+          : "text-gray-600 hover:text-gray-600"
       }`}
     >
-      <Icon className="w-5 h-5" />
+      {/* Icon */}
+      <div className="relative h-5 w-5">
+        <OutlineIcon
+          className={`absolute inset-0 h-5 w-5 transition-all duration-200 ${
+            active
+              ? "opacity-0 scale-95"
+              : "opacity-100 scale-100 group-hover:opacity-0 group-hover:scale-95"
+          }`}
+        />
+
+        <SolidIcon
+          className={`absolute inset-0 h-5 w-5 transition-all duration-200 ${
+            active
+              ? "opacity-100 scale-100"
+              : "opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100"
+          }`}
+        />
+      </div>
+
+      {/* Label */}
       <span className="text-[11px] leading-none">{label}</span>
+
+      {/* Active Indicator */}
+      <span
+        className={`absolute -bottom-2 left-0 h-1 w-full rounded-full bg-gray-600 transition-all duration-300 ${
+          active ? "opacity-100 scale-x-100" : "opacity-0 scale-x-0"
+        }`}
+      />
+
+      {/* Badge */}
       {!!badge && badge > 0 && (
-        <span className="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold flex items-center justify-center">
+        <span className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
           {badge > 9 ? "9+" : badge}
         </span>
       )}
