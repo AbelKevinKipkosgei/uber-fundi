@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { Search as SearchIcon, MapPin, Star } from "lucide-react";
 import { useDebounce } from "@/lib/useDebounce";
-import { useSearchParams } from "next/navigation";
 
 type Provider = {
   id: number;
@@ -15,16 +15,21 @@ type Provider = {
   category: { name: string };
 };
 
-export default function SearchPage() {
+function SearchPageContent() {
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
-  const debouncedQuery = useDebounce(query, 400);
+  const debouncedQuery = useDebounce(query);
 
   const [providers, setProviders] = useState<Provider[]>([]);
   const [nextCursor, setNextCursor] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+
+  // Keep the input synchronized with the URL query parameter
+  useEffect(() => {
+    setQuery(searchParams.get("q") ?? "");
+  }, [searchParams]);
 
   useEffect(() => {
     if (debouncedQuery.trim().length < 2) {
@@ -165,5 +170,22 @@ export default function SearchPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-blue-50 px-6 py-14">
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="h-8 w-48 bg-white rounded-lg animate-pulse border" />
+            <div className="h-16 rounded-2xl bg-white animate-pulse border" />
+          </div>
+        </div>
+      }
+    >
+      <SearchPageContent />
+    </Suspense>
   );
 }
