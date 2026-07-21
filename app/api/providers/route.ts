@@ -13,8 +13,16 @@ export async function POST(req: Request) {
 
   const parsed = await parseBody(req, createProviderSchema);
   if ("error" in parsed) return parsed.error;
-  const { name, phone, bio, categoryId, subcategoryIds, latitude, longitude } =
-    parsed.data;
+  const {
+    name,
+    phone,
+    bio,
+    imageUrl,
+    categoryId,
+    subcategoryIds,
+    latitude,
+    longitude,
+  } = parsed.data;
 
   // Ensure the chosen category is actually a top-level (main) category,
   // not a subcategory being mistakenly used as the main one.
@@ -58,6 +66,7 @@ export async function POST(req: Request) {
         name,
         phone,
         bio: bio || null,
+        imageUrl: imageUrl || null,
         latitude,
         longitude,
         category: { connect: { id: categoryId } },
