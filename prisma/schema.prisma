@@ -26,6 +26,7 @@ model Provider {
   reviews       Review[]
   suspended     Boolean             @default(false) @map("suspended")
   bookings      Booking[]
+  imageUrl      String?             @map("image_url")
 
   @@map("providers")
 }
