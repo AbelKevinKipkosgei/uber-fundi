@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Search, Ban, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
+import { useDebounce } from "@/lib/useDebounce";
 
 type AdminUser = {
   id: string;
@@ -16,9 +17,10 @@ type AdminUser = {
 export default function UsersTab() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [query, setQuery] = useState("");
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounce(query, 350);
 
   const fetchUsers = async (q?: string) => {
     setLoading(true);
@@ -37,13 +39,9 @@ export default function UsersTab() {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    fetchUsers(query);
-  };
+    fetchUsers(debouncedQuery);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedQuery]);
 
   const toggleBan = async (id: string) => {
     setTogglingId(id);
@@ -72,23 +70,15 @@ export default function UsersTab() {
 
   return (
     <div>
-      <form onSubmit={handleSearch} className="flex gap-2 mb-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name or email..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-700"
-          />
-        </div>
-        <button
-          type="submit"
-          className="px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition"
-        >
-          Search
-        </button>
-      </form>
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search by name or email..."
+          className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-700"
+        />
+      </div>
 
       {error && (
         <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2 mb-4">
