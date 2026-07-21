@@ -20,6 +20,13 @@ export async function GET(req: Request) {
           { name: { contains: query, mode: "insensitive" } },
           { bio: { contains: query, mode: "insensitive" } },
           { category: { name: { contains: query, mode: "insensitive" } } },
+          {
+            subcategories: {
+              some: {
+                category: { name: { contains: query, mode: "insensitive" } },
+              },
+            },
+          },
         ],
       },
       include: {
