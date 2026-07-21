@@ -9,7 +9,6 @@ import {
   ChatBubbleLeftRightIcon as ChatOutline,
   ShieldCheckIcon as ShieldOutline,
   BriefcaseIcon as BriefcaseOutline,
-  MagnifyingGlassIcon as SearchOutline,
 } from "@heroicons/react/24/outline";
 import {
   WrenchScrewdriverIcon as WrenchSolid,
@@ -17,10 +16,11 @@ import {
   ChatBubbleLeftRightIcon as ChatSolid,
   ShieldCheckIcon as ShieldSolid,
   BriefcaseIcon as BriefcaseSolid,
-  MagnifyingGlassIcon as SearchSolid,
 } from "@heroicons/react/24/solid";
 import NotificationBell from "@/components/NotificationBell";
 import { useEffect, useState } from "react";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import SearchOverlay from "@/components/SearchOverlay";
 
 function NavLink({
   href,
@@ -69,6 +69,8 @@ export default function Navbar() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   const [unreadBookings, setUnreadBookings] = useState(0);
+
+  const [showSearch, setShowSearch] = useState(false);
 
   useEffect(() => {
     if (!isSignedIn) {
@@ -162,13 +164,13 @@ export default function Navbar() {
         </Link>
 
         <div className="hidden md:flex items-center gap-6 text-sm">
-          <NavLink
-            href="/search"
-            active={pathname.startsWith("/search")}
-            outlineIcon={SearchOutline}
-            solidIcon={SearchSolid}
-            label="Search"
-          />
+          <button
+            onClick={() => setShowSearch(true)}
+            className="flex items-center gap-1.5 text-gray-600 hover:text-blue-600"
+          >
+            <MagnifyingGlassIcon className="w-4 h-4" />
+            Search
+          </button>
           {isAdminUser && (
             <NavLink
               href="/admin"
@@ -248,6 +250,7 @@ export default function Navbar() {
           )}
         </div>
       </nav>
+      {showSearch && <SearchOverlay onClose={() => setShowSearch(false)} />}
     </header>
   );
 }
