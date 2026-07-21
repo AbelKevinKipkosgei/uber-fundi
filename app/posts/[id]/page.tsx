@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, User } from "lucide-react";
 import LikeButton from "@/components/LikeButton";
 import CommentSection from "@/components/CommentSection";
+import Image from "next/image";
 
 type Post = {
   id: string;
@@ -107,12 +108,14 @@ export default function PostDetailPage() {
 
         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
           {post.images.length > 0 ? (
-            <div className="relative bg-gray-100">
+            <div className="relative h-80 sm:h-96 bg-gray-100">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={post.images[activeImage]}
                 alt={`${post.title} - photo ${activeImage + 1}`}
-                className="w-full h-80 sm:h-96 object-cover"
+                fill
+                className="object-cover"
+                priority
               />
 
               {post.images.length > 1 && (
@@ -156,16 +159,12 @@ export default function PostDetailPage() {
                 <button
                   key={img}
                   onClick={() => setActiveImage(i)}
-                  className={`shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition ${
+                  className={`relative shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition ${
                     i === activeImage ? "border-blue-600" : "border-transparent"
                   }`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={img}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
+                  <Image src={img} alt="" fill className="object-cover" />
                 </button>
               ))}
             </div>

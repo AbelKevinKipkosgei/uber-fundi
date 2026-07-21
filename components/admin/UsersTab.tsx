@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Search, Ban, CheckCircle2 } from "lucide-react";
+import Image from "next/image";
 
 type AdminUser = {
   id: string;
@@ -113,7 +114,13 @@ export default function UsersTab() {
             >
               <div className="flex items-center gap-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={u.imageUrl} alt="" className="w-9 h-9 rounded-full" />
+                <Image
+                  src={u.imageUrl}
+                  alt=""
+                  width={36}
+                  height={36}
+                  className="rounded-full"
+                />
                 <div>
                   <p className="font-medium text-gray-900 text-sm">{u.name}</p>
                   <p className="text-xs text-gray-500">

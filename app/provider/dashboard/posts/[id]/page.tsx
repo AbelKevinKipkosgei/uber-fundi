@@ -14,6 +14,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import Image from "next/image";
 
 type CategoryOption = { id: string; name: string };
 
@@ -252,12 +253,12 @@ export default function EditPostPage() {
             {images.length > 0 && (
               <div className="mt-2 grid grid-cols-3 gap-2">
                 {images.map((url) => (
-                  <div key={url} className="relative group">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                  <div key={url} className="relative group w-full h-24">
+                    <Image
                       src={url}
                       alt="Post"
-                      className="w-full h-24 object-cover rounded-xl border border-gray-200"
+                      fill
+                      className="object-cover rounded-xl border border-gray-200"
                     />
                     <button
                       type="button"

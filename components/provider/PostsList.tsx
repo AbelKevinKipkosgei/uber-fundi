@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Trash2, Heart, MessageCircle } from "lucide-react";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import Image from "next/image";
 
 type Post = {
   id: string;
@@ -96,9 +97,11 @@ export default function PostsList({
         >
           {post.images[0] ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               src={post.images[0]}
               alt={post.title}
+              width={400}
+              height={128}
               className="w-full h-32 object-cover"
             />
           ) : (
