@@ -21,19 +21,22 @@ const STATUS_STYLES: Record<string, string> = {
 
 export default function ReportsTab() {
   const [reports, setReports] = useState<Report[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [filter, setFilter] = useState<string>("PENDING");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  const fetchReports = async () => {
+  const fetchReports = async (status: string) => {
     setLoading(true);
     try {
-      const url = filter
-        ? `/api/admin/reports?status=${filter}`
+      const url = status
+        ? `/api/admin/reports?status=${status}`
         : "/api/admin/reports";
       const res = await fetch(url);
       const data = await res.json();
-      setReports(Array.isArray(data) ? data : []);
+      setReports(data.reports ?? []);
+      setNextCursor(data.nextCursor ?? null);
     } catch (err) {
       console.error(err);
     } finally {
@@ -42,9 +45,27 @@ export default function ReportsTab() {
   };
 
   useEffect(() => {
-    fetchReports();
+    fetchReports(filter);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
+
+  const loadMore = async () => {
+    if (!nextCursor) return;
+    setLoadingMore(true);
+    try {
+      const url = filter
+        ? `/api/admin/reports?status=${filter}&cursor=${nextCursor}`
+        : `/api/admin/reports?cursor=${nextCursor}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      setReports((prev) => [...prev, ...(data.reports ?? [])]);
+      setNextCursor(data.nextCursor ?? null);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const updateStatus = async (id: string, status: string) => {
     setUpdatingId(id);
@@ -96,60 +117,74 @@ export default function ReportsTab() {
           No reports found.
         </p>
       ) : (
-        <div className="space-y-3">
-          {reports.map((r) => (
-            <div
-              key={r.id}
-              className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <span
-                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[r.status]}`}
-                  >
-                    <Clock className="w-3 h-3" />
-                    {r.status}
-                  </span>
-                  <p className="mt-2 text-sm text-gray-900">
-                    <span className="font-medium">{r.reporter.name}</span>{" "}
-                    reported{" "}
-                    <span className="font-medium">{r.reportedUser.name}</span>
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Reason: {r.reason.replace(/_/g, " ")}
-                  </p>
-                  {r.details && (
-                    <p className="text-sm text-gray-500 mt-1">{r.details}</p>
-                  )}
-                  <p className="text-xs text-gray-400 mt-2">
-                    {new Date(r.createdAt).toLocaleString()}
-                  </p>
-                </div>
-
-                {r.status === "PENDING" && (
-                  <div className="flex gap-2 shrink-0">
-                    <button
-                      onClick={() => updateStatus(r.id, "RESOLVED")}
-                      disabled={updatingId === r.id}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-green-600 text-white text-xs font-medium hover:bg-green-700 transition disabled:opacity-60"
+        <>
+          <div className="space-y-3">
+            {reports.map((r) => (
+              <div
+                key={r.id}
+                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[r.status]}`}
                     >
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      Resolve
-                    </button>
-                    <button
-                      onClick={() => updateStatus(r.id, "DISMISSED")}
-                      disabled={updatingId === r.id}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-gray-200 text-gray-600 text-xs font-medium hover:bg-gray-50 transition disabled:opacity-60"
-                    >
-                      <XCircle className="w-3.5 h-3.5" />
-                      Dismiss
-                    </button>
+                      <Clock className="w-3 h-3" />
+                      {r.status}
+                    </span>
+                    <p className="mt-2 text-sm text-gray-900">
+                      <span className="font-medium">{r.reporter.name}</span>{" "}
+                      reported{" "}
+                      <span className="font-medium">{r.reportedUser.name}</span>
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Reason: {r.reason.replace(/_/g, " ")}
+                    </p>
+                    {r.details && (
+                      <p className="text-sm text-gray-500 mt-1">{r.details}</p>
+                    )}
+                    <p className="text-xs text-gray-400 mt-2">
+                      {new Date(r.createdAt).toLocaleString()}
+                    </p>
                   </div>
-                )}
+
+                  {r.status === "PENDING" && (
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={() => updateStatus(r.id, "RESOLVED")}
+                        disabled={updatingId === r.id}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-green-600 text-white text-xs font-medium hover:bg-green-700 transition disabled:opacity-60"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Resolve
+                      </button>
+                      <button
+                        onClick={() => updateStatus(r.id, "DISMISSED")}
+                        disabled={updatingId === r.id}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-gray-200 text-gray-600 text-xs font-medium hover:bg-gray-50 transition disabled:opacity-60"
+                      >
+                        <XCircle className="w-3.5 h-3.5" />
+                        Dismiss
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
+            ))}
+          </div>
+
+          {nextCursor && (
+            <div className="mt-4 text-center">
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="px-6 py-2 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition disabled:opacity-60"
+              >
+                {loadingMore ? "Loading..." : "Load more"}
+              </button>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
     </div>
   );
