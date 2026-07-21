@@ -2,6 +2,8 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { isAdmin } from "@/lib/isAdmin";
 import { NextResponse } from "next/server";
 
+const PAGE_SIZE = 20;
+
 export async function GET(req: Request) {
   if (!(await isAdmin())) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -9,12 +11,14 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const query = searchParams.get("query") ?? undefined;
+  const offset = parseInt(searchParams.get("offset") ?? "0", 10);
 
   try {
     const client = await clerkClient();
-    const { data } = await client.users.getUserList({
+    const { data, totalCount } = await client.users.getUserList({
       query,
-      limit: 50,
+      limit: PAGE_SIZE,
+      offset,
       orderBy: "-created_at",
     });
 
@@ -30,7 +34,10 @@ export async function GET(req: Request) {
       createdAt: u.createdAt,
     }));
 
-    return NextResponse.json(users);
+    return NextResponse.json({
+      users,
+      nextOffset: offset + PAGE_SIZE < totalCount ? offset + PAGE_SIZE : null,
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
