@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Search as SearchIcon, MapPin, Star } from "lucide-react";
 import { useDebounce } from "@/lib/useDebounce";
+import { useSearchParams } from "next/navigation";
 
 type Provider = {
   id: number;
@@ -15,7 +16,8 @@ type Provider = {
 };
 
 export default function SearchPage() {
-  const [query, setQuery] = useState("");
+  const searchParams = useSearchParams();
+  const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const debouncedQuery = useDebounce(query, 400);
 
   const [providers, setProviders] = useState<Provider[]>([]);
