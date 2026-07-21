@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { CldUploadWidget } from "next-cloudinary";
+import { ImagePlus } from "lucide-react";
 
 type Category = {
   id: string;
@@ -30,6 +32,8 @@ export default function AddProviderPage() {
   const [selectedSubcategoryIds, setSelectedSubcategoryIds] = useState<
     string[]
   >([]);
+
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -91,6 +95,7 @@ export default function AddProviderPage() {
               name: form.name,
               phone: form.phone,
               bio: form.bio,
+              imageUrl,
               categoryId: form.categoryId,
               subcategoryIds: selectedSubcategoryIds,
               latitude,
@@ -152,6 +157,54 @@ export default function AddProviderPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="text-sm text-gray-600">
+              Profile Photo (optional)
+            </label>
+            <div className="mt-1 flex items-center gap-4">
+              {imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={imageUrl}
+                  alt="Profile"
+                  className="w-16 h-16 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-300">
+                  <ImagePlus className="w-6 h-6" />
+                </div>
+              )}
+              <CldUploadWidget
+                signatureEndpoint="/api/sign-cloudinary-params"
+                options={{
+                  multiple: false,
+                  maxFiles: 1,
+                  resourceType: "image",
+                }}
+                onSuccess={(result) => {
+                  if (
+                    typeof result.info === "object" &&
+                    result.info &&
+                    "secure_url" in result.info
+                  ) {
+                    setImageUrl(
+                      (result.info as { secure_url: string }).secure_url,
+                    );
+                  }
+                }}
+              >
+                {({ open }) => (
+                  <button
+                    type="button"
+                    onClick={() => open()}
+                    className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:border-blue-300 hover:text-blue-600 transition"
+                  >
+                    {imageUrl ? "Change photo" : "Upload photo"}
+                  </button>
+                )}
+              </CldUploadWidget>
+            </div>
+          </div>
           <div>
             <label className="text-sm text-gray-600">Full Name</label>
             <input
