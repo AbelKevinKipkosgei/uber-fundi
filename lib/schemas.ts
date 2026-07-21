@@ -57,6 +57,7 @@ export const createProviderSchema = z.object({
   subcategoryIds: z.array(z.string().cuid()).optional(),
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
+  imageUrl: z.string().url().optional().nullable(),
 });
 
 export const updateProviderSchema = z.object({
@@ -65,6 +66,7 @@ export const updateProviderSchema = z.object({
   bio: z.string().trim().max(500).optional(),
   isAvailable: z.boolean().optional(),
   subcategoryIds: z.array(z.string().cuid()).optional(),
+  imageUrl: z.string().url().optional().nullable(),
 });
 
 export const postCommentSchema = z.object({
