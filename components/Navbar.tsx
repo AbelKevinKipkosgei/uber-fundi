@@ -9,6 +9,7 @@ import {
   ChatBubbleLeftRightIcon as ChatOutline,
   ShieldCheckIcon as ShieldOutline,
   BriefcaseIcon as BriefcaseOutline,
+  MagnifyingGlassIcon as SearchOutline,
 } from "@heroicons/react/24/outline";
 import {
   WrenchScrewdriverIcon as WrenchSolid,
@@ -16,6 +17,7 @@ import {
   ChatBubbleLeftRightIcon as ChatSolid,
   ShieldCheckIcon as ShieldSolid,
   BriefcaseIcon as BriefcaseSolid,
+  MagnifyingGlassIcon as SearchSolid,
 } from "@heroicons/react/24/solid";
 import NotificationBell from "@/components/NotificationBell";
 import { useEffect, useState } from "react";
@@ -160,6 +162,13 @@ export default function Navbar() {
         </Link>
 
         <div className="hidden md:flex items-center gap-6 text-sm">
+          <NavLink
+            href="/search"
+            active={pathname.startsWith("/search")}
+            outlineIcon={SearchOutline}
+            solidIcon={SearchSolid}
+            label="Search"
+          />
           {isAdminUser && (
             <NavLink
               href="/admin"
