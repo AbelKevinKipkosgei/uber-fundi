@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Bell, MessageSquare, Star, Heart, CheckCheck } from "lucide-react";
+// import { Bell, MessageSquare, Star, Heart, CheckCheck } from "lucide-react";
+import { MessageSquare, Star, Heart, CheckCheck } from "lucide-react";
+
+import { BellIcon as BellOutline } from "@heroicons/react/24/outline";
+
+import { BellIcon as BellSolid } from "@heroicons/react/24/solid";
 
 type Notification = {
   id: string;
@@ -26,7 +31,7 @@ function iconForType(type: string) {
     case "COMMENT_LIKED":
       return Heart;
     default:
-      return Bell;
+      return BellOutline;
   }
 }
 
@@ -93,11 +98,28 @@ export default function NotificationBell() {
     <div className="relative" ref={containerRef}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="relative w-9 h-9 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition"
+        className="group relative flex h-9 w-9 items-center justify-center rounded-full text-gray-600 transition hover:bg-gray-100"
       >
-        <Bell className="w-5 h-5" />
+        <div className="relative h-5 w-5">
+          <BellOutline
+            className={`absolute inset-0 h-5 w-5 transition-all duration-200 ${
+              open
+                ? "opacity-0 scale-95"
+                : "opacity-100 scale-100 group-hover:opacity-0 group-hover:scale-95"
+            }`}
+          />
+
+          <BellSolid
+            className={`absolute inset-0 h-5 w-5 transition-all duration-200 ${
+              open
+                ? "opacity-100 scale-100"
+                : "opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100"
+            }`}
+          />
+        </div>
+
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-4.5 h-4.5 px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold flex items-center justify-center">
+          <span className="absolute -top-0.5 -right-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
