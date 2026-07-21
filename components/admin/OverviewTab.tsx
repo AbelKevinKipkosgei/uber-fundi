@@ -41,20 +41,25 @@ export default function OverviewTab() {
       label: "Providers",
       value: stats.providerCount,
       icon: Users,
-      color: "blue",
+      color: "text-blue-500",
     },
-    { label: "Posts", value: stats.postCount, icon: FileImage, color: "green" },
+    {
+      label: "Posts",
+      value: stats.postCount,
+      icon: FileImage,
+      color: "text-green-500",
+    },
     {
       label: "Pending Reports",
       value: stats.pendingReports,
       icon: AlertCircle,
-      color: "red",
+      color: "text-red-500",
     },
     {
       label: "Total Reports",
       value: stats.totalReports,
       icon: Flag,
-      color: "gray",
+      color: "text-gray-500",
     },
   ];
 
@@ -65,7 +70,7 @@ export default function OverviewTab() {
           key={card.label}
           className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5"
         >
-          <card.icon className={`w-5 h-5 text-${card.color}-500 mb-2`} />
+          <card.icon className={`w-5 h-5 ${card.color} mb-2`} />
           <p className="text-2xl font-bold text-gray-900">{card.value}</p>
           <p className="text-sm text-gray-500">{card.label}</p>
         </div>
