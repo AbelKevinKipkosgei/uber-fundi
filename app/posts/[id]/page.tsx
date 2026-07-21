@@ -114,7 +114,7 @@ export default function PostDetailPage() {
                 src={post.images[activeImage]}
                 alt={`${post.title} - photo ${activeImage + 1}`}
                 fill
-                className="object-cover"
+                className="object-contain"
                 priority
               />
 
