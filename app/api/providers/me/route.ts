@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { parseBody } from "@/lib/validate";
 import { updateProviderSchema } from "@/lib/schemas";
+import { resolveProviderImage } from "@/lib/resolveProviderImage";
 
 export async function GET() {
   const { userId } = await auth();
@@ -102,7 +103,9 @@ export async function PATCH(req: Request) {
           ...(name !== undefined ? { name } : {}),
           ...(phone !== undefined ? { phone } : {}),
           ...(bio !== undefined ? { bio: bio || null } : {}),
-          ...(imageUrl !== undefined ? { imageUrl: imageUrl || null } : {}),
+          ...(imageUrl !== undefined
+            ? { imageUrl: await resolveProviderImage(userId, imageUrl) }
+            : {}),
           ...(isAvailable !== undefined ? { isAvailable } : {}),
         },
         include: {
