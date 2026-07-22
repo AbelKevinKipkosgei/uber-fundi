@@ -18,6 +18,7 @@ import {
   Tv,
   Layers,
   ImagePlus,
+  Trash2,
 } from "lucide-react";
 import { CldUploadWidget } from "next-cloudinary";
 
@@ -168,6 +169,10 @@ export default function ProviderDashboardPage() {
     }
   };
 
+  const handleRemovePhoto = () => {
+    setImageUrl(null);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-blue-50 px-6 py-14">
@@ -275,35 +280,47 @@ export default function ProviderDashboardPage() {
                   <ImagePlus className="w-6 h-6" />
                 </div>
               )}
-              <CldUploadWidget
-                signatureEndpoint="/api/sign-cloudinary-params"
-                options={{
-                  multiple: false,
-                  maxFiles: 1,
-                  resourceType: "image",
-                }}
-                onSuccess={(result) => {
-                  if (
-                    typeof result.info === "object" &&
-                    result.info &&
-                    "secure_url" in result.info
-                  ) {
-                    setImageUrl(
-                      (result.info as { secure_url: string }).secure_url,
-                    );
-                  }
-                }}
-              >
-                {({ open }) => (
+              <div className="flex items-center gap-2">
+                <CldUploadWidget
+                  signatureEndpoint="/api/sign-cloudinary-params"
+                  options={{
+                    multiple: false,
+                    maxFiles: 1,
+                    resourceType: "image",
+                  }}
+                  onSuccess={(result) => {
+                    if (
+                      typeof result.info === "object" &&
+                      result.info &&
+                      "secure_url" in result.info
+                    ) {
+                      setImageUrl(
+                        (result.info as { secure_url: string }).secure_url,
+                      );
+                    }
+                  }}
+                >
+                  {({ open }) => (
+                    <button
+                      type="button"
+                      onClick={() => open()}
+                      className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:border-blue-300 hover:text-blue-600 transition"
+                    >
+                      {imageUrl ? "Change photo" : "Upload photo"}
+                    </button>
+                  )}
+                </CldUploadWidget>
+
+                {imageUrl && (
                   <button
                     type="button"
-                    onClick={() => open()}
-                    className="px-4 py-2 rounded-full border border-gray-200 text-sm text-gray-600 hover:border-blue-300 hover:text-blue-600 transition"
+                    onClick={handleRemovePhoto}
+                    className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 hover:text-red-600 hover:border-red-200 transition"
                   >
-                    {imageUrl ? "Change photo" : "Upload photo"}
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 )}
-              </CldUploadWidget>
+              </div>
             </div>
           </div>
           <div className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3">
