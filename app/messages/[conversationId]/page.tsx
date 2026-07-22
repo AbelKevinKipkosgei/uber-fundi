@@ -167,8 +167,17 @@ export default function ConversationThreadPage() {
         <div className="flex-1 bg-white rounded-3xl border border-gray-100 shadow-sm flex flex-col overflow-hidden">
           {/* HEADER — who you're chatting with */}
           <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
-            <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-semibold flex items-center justify-center shrink-0">
-              {otherParticipant?.name.charAt(0).toUpperCase() ?? "?"}
+            <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-semibold flex items-center justify-center shrink-0 overflow-hidden">
+              {otherParticipant?.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={otherParticipant.imageUrl}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                (otherParticipant?.name.charAt(0).toUpperCase() ?? "?")
+              )}
             </div>
             <p className="font-medium text-gray-900 flex-1">
               {otherParticipant?.name ?? "Loading..."}
