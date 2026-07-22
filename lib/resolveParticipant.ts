@@ -16,10 +16,26 @@ export async function resolveParticipant(
   });
 
   if (provider) {
+    let providerImageUrl = provider.imageUrl;
+
+    // Safety net for providers created before Clerk-photo syncing existed
+    if (!providerImageUrl) {
+      try {
+        const client = await clerkClient();
+        const clerkUser = await client.users.getUser(targetClerkUserId);
+        providerImageUrl = clerkUser.imageUrl || null;
+      } catch (err) {
+        console.error(
+          `Failed to fetch fallback Clerk image for ${targetClerkUserId}`,
+          err,
+        );
+      }
+    }
+
     return {
       clerkUserId: targetClerkUserId,
       name: provider.name,
-      imageUrl: provider.imageUrl,
+      imageUrl: providerImageUrl,
     };
   }
 
