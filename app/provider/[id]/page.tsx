@@ -284,7 +284,7 @@ export default function ProviderProfilePage() {
                 className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 text-white py-3 font-medium hover:bg-blue-700 transition disabled:opacity-60"
               >
                 <MessageCircle className="w-5 h-5" />
-                {startingChat ? "Starting chat..." : "Message on UberFundi"}
+                {startingChat ? "Starting chat..." : "Message"}
               </button>
             )}
 
