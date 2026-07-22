@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import { useEffect, useMemo, useState } from "react";
 import {
   Wrench,
@@ -14,9 +16,10 @@ import {
   ChevronDown,
   MapPin,
   Star,
-  Phone,
+  MessageCircle,
   Layers,
 } from "lucide-react";
+import { whatsappLink } from "@/lib/whatsapp";
 
 type Subcategory = {
   id: string;
@@ -35,6 +38,8 @@ type Provider = {
   id: number;
   name: string;
   phone: string;
+  bio: string | null;
+  imageUrl: string | null;
   distance: number;
   rating: number;
   category?: { name: string };
@@ -51,6 +56,8 @@ const ICONS: Record<string, React.ElementType> = {
   "tv-mounting-home-tech": Tv,
 };
 
+const NEARBY_RADIUS_KM = 20;
+
 function CategoryIcon({
   slug,
   className,
@@ -63,6 +70,9 @@ function CategoryIcon({
 }
 
 export default function ProvidersPage() {
+  const router = useRouter();
+  const { isSignedIn } = useUser();
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
 
@@ -71,6 +81,10 @@ export default function ProvidersPage() {
 
   const [providers, setProviders] = useState<Provider[]>([]);
   const [providersLoading, setProvidersLoading] = useState(true);
+  const [locationDenied, setLocationDenied] = useState(false);
+
+  const [startingChatId, setStartingChatId] = useState<number | null>(null);
+  const [contactError, setContactError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -93,7 +107,7 @@ export default function ProvidersPage() {
       async (pos) => {
         try {
           const res = await fetch(
-            `/api/providers/nearby?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}`,
+            `/api/providers/nearby?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}&radius=${NEARBY_RADIUS_KM}`,
           );
 
           const contentType = res.headers.get("content-type");
@@ -112,6 +126,7 @@ export default function ProvidersPage() {
         }
       },
       () => {
+        setLocationDenied(true);
         setProvidersLoading(false);
       },
     );
@@ -121,6 +136,37 @@ export default function ProvidersPage() {
     () => categories.find((c) => c.slug === hoveredSlug) ?? null,
     [categories, hoveredSlug],
   );
+
+  const handleMessage = async (providerId: number) => {
+    if (!isSignedIn) {
+      router.push("/sign-in");
+      return;
+    }
+
+    setStartingChatId(providerId);
+    setContactError(null);
+
+    try {
+      const res = await fetch("/api/conversations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ providerId }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        router.push(`/messages/${data.conversationId}`);
+      } else {
+        setContactError(data.error ?? "Failed to start conversation");
+      }
+    } catch (err) {
+      console.error(err);
+      setContactError("Failed to start conversation");
+    } finally {
+      setStartingChatId(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-blue-50">
@@ -135,7 +181,7 @@ export default function ProvidersPage() {
         </p>
       </div>
 
-      {/* CATEGORY BROWSER */}
+      {/* CATEGORY BROWSER — unchanged */}
       <div className="max-w-7xl mx-auto px-6 pb-16">
         {categoriesLoading ? (
           <div className="grid gap-3">
@@ -148,7 +194,6 @@ export default function ProvidersPage() {
           </div>
         ) : (
           <>
-            {/* DESKTOP: sidebar + hover flyout, hidden below md */}
             <div
               className="hidden md:flex rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden"
               onMouseLeave={() => setHoveredSlug(null)}
@@ -233,7 +278,6 @@ export default function ProvidersPage() {
               </div>
             </div>
 
-            {/* MOBILE: accordion, hidden md and up */}
             <div className="md:hidden rounded-2xl border border-gray-100 bg-white shadow-sm divide-y divide-gray-100 overflow-hidden">
               {categories.map((category) => {
                 const isOpen = expandedSlug === category.slug;
@@ -293,19 +337,38 @@ export default function ProvidersPage() {
 
       {/* NEARBY PROVIDERS */}
       <div className="max-w-7xl mx-auto px-6 pb-20">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-2">
           <h2 className="text-3xl font-bold text-gray-900">Nearby Providers</h2>
           <div className="text-sm text-gray-500">Sorted by distance</div>
         </div>
+        <p className="text-sm text-gray-400 mb-8">
+          Showing providers within {NEARBY_RADIUS_KM} km of your location
+        </p>
+
+        {contactError && (
+          <p className="mb-6 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+            {contactError}
+          </p>
+        )}
 
         {providersLoading ? (
           <div className="grid md:grid-cols-3 gap-6">
             {[1, 2, 3].map((item) => (
               <div
                 key={item}
-                className="h-48 rounded-2xl bg-white animate-pulse border"
+                className="h-56 rounded-2xl bg-white animate-pulse border"
               />
             ))}
+          </div>
+        ) : locationDenied ? (
+          <div className="bg-white rounded-2xl border p-12 text-center shadow-sm">
+            <MapPin className="w-10 h-10 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900">
+              Location access needed
+            </h3>
+            <p className="mt-2 text-gray-500">
+              Enable location access to see providers near you.
+            </p>
           </div>
         ) : providers.length === 0 ? (
           <div className="bg-white rounded-2xl border p-12 text-center shadow-sm">
@@ -314,7 +377,8 @@ export default function ProvidersPage() {
               No providers found nearby
             </h3>
             <p className="mt-2 text-gray-500">
-              Be the first provider in your area.
+              No providers within {NEARBY_RADIUS_KM} km yet. Be the first in
+              your area.
             </p>
           </div>
         ) : (
@@ -325,37 +389,76 @@ export default function ProvidersPage() {
                 className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 p-6"
               >
                 <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-900">
-                      {provider.name}
-                    </h3>
-                    <p className="text-blue-600 font-medium">
-                      {provider.category?.name ?? "Service Provider"}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-full bg-blue-100 text-blue-700 font-semibold flex items-center justify-center shrink-0 overflow-hidden">
+                      {provider.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={provider.imageUrl}
+                          alt={provider.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        provider.name.charAt(0).toUpperCase()
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {provider.name}
+                      </h3>
+                      <p className="text-blue-600 text-sm font-medium">
+                        {provider.category?.name ?? "Service Provider"}
+                      </p>
+                    </div>
                   </div>
-                  <span className="px-3 py-1 text-xs rounded-full bg-green-100 text-green-700">
+                  <span className="px-3 py-1 text-xs rounded-full bg-green-100 text-green-700 shrink-0">
                     Available
                   </span>
                 </div>
 
-                <div className="mt-5 space-y-2 text-sm text-gray-600">
-                  <p className="flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-gray-400" />
-                    {provider.phone}
+                {provider.bio && (
+                  <p className="mt-3 text-sm text-gray-600 line-clamp-2">
+                    {provider.bio}
                   </p>
-                  <p className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-gray-400" />
+                )}
+
+                <div className="mt-4 flex items-center gap-3 text-sm text-gray-500">
+                  <span className="flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5" />
                     {Number(provider.distance).toFixed(1)} km away
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <Star className="w-4 h-4 text-gray-400" />
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
                     {provider.rating ?? 0}
-                  </p>
+                  </span>
                 </div>
 
-                <button className="mt-6 w-full rounded-xl bg-blue-600 text-white py-3 font-medium hover:bg-blue-700 transition">
-                  Contact Provider
-                </button>
+                <div className="mt-5 flex gap-2">
+                  <button
+                    onClick={() => handleMessage(provider.id)}
+                    disabled={startingChatId === provider.id}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 text-white py-2.5 text-sm font-medium hover:bg-blue-700 transition disabled:opacity-60"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    {startingChatId === provider.id ? "Starting..." : "Message"}
+                  </button>
+                  <a
+                    href={whatsappLink(provider.phone, provider.name)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-green-600 text-white py-2.5 text-sm font-medium hover:bg-green-700 transition"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    WhatsApp
+                  </a>
+                </div>
+
+                <Link
+                  href={`/provider/${provider.id}`}
+                  className="block mt-3 text-center text-xs text-gray-400 hover:text-blue-600 transition"
+                >
+                  View full profile
+                </Link>
               </div>
             ))}
           </div>
