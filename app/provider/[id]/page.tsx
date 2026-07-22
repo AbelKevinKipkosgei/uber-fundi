@@ -33,6 +33,7 @@ type Provider = {
   name: string;
   phone: string;
   bio: string | null;
+  imageUrl: string | null;
   rating: number | null;
   isAvailable: boolean | null;
   isOwnProfile: boolean;
@@ -197,13 +198,21 @@ export default function ProviderProfilePage() {
 
         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
           <div className="flex items-start gap-5">
-            <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center shrink-0">
-              <CategoryIcon
-                slug={provider.category.slug}
-                className="w-8 h-8 text-blue-600"
-              />
+            <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center shrink-0 overflow-hidden">
+              {provider.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={provider.imageUrl}
+                  alt={provider.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <CategoryIcon
+                  slug={provider.category.slug}
+                  className="w-8 h-8 text-blue-600"
+                />
+              )}
             </div>
-
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl font-bold text-gray-900">
