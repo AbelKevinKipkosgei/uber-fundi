@@ -8,6 +8,7 @@ type Provider = {
   id: number;
   name: string;
   phone: string;
+  imageUrl: string | null;
   rating: number | null;
   suspended: boolean;
   category: { name: string };
@@ -117,11 +118,31 @@ export default function ProvidersTab() {
                 key={p.id}
                 className="flex items-center justify-between px-5 py-4"
               >
-                <div>
+                {/* <div>
                   <p className="font-medium text-gray-900">{p.name}</p>
                   <p className="text-xs text-gray-500">
                     {p.category.name} · {p.phone} · ★ {p.rating ?? 0}
                   </p>
+                </div> */}
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 font-semibold flex items-center justify-center shrink-0 overflow-hidden text-sm">
+                    {p.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={p.imageUrl}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      p.name.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">{p.name}</p>
+                    <p className="text-xs text-gray-500">
+                      {p.category.name} · {p.phone} · ★ {p.rating ?? 0}
+                    </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-3">
                   {p.suspended && (
