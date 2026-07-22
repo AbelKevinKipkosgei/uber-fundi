@@ -17,7 +17,9 @@ import {
   Sofa,
   Tv,
   Layers,
+  ImagePlus,
 } from "lucide-react";
+import { CldUploadWidget } from "next-cloudinary";
 
 type Subcategory = { id: string; name: string; slug: string };
 
@@ -26,6 +28,7 @@ type Provider = {
   name: string;
   phone: string;
   bio: string | null;
+  imageUrl: string | null;
   isAvailable: boolean | null;
   category: { id: string; name: string; slug: string };
   subcategories: { category: Subcategory }[];
@@ -81,6 +84,8 @@ export default function ProviderDashboardPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [postsRefreshKey, setPostsRefreshKey] = useState(0);
 
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -99,6 +104,7 @@ export default function ProviderDashboardPage() {
 
         const data: Provider = await res.json();
         setProvider(data);
+        setImageUrl(data.imageUrl);
         setForm({ name: data.name, phone: data.phone, bio: data.bio ?? "" });
         setIsAvailable(data.isAvailable ?? true);
         setSelectedSubcategoryIds(data.subcategories.map((s) => s.category.id));
@@ -138,6 +144,7 @@ export default function ProviderDashboardPage() {
           name: form.name,
           phone: form.phone,
           bio: form.bio,
+          imageUrl,
           isAvailable,
           subcategoryIds: selectedSubcategoryIds,
         }),
@@ -212,11 +219,20 @@ export default function ProviderDashboardPage() {
     <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-blue-50">
       <div className="max-w-2xl mx-auto px-6 pt-12 pb-20">
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
-            <CategoryIcon
-              slug={provider.category.slug}
-              className="w-6 h-6 text-blue-600"
-            />
+          <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center overflow-hidden">
+            {imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={imageUrl}
+                alt=""
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <CategoryIcon
+                slug={provider.category.slug}
+                className="w-6 h-6 text-blue-600"
+              />
+            )}
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
@@ -244,6 +260,52 @@ export default function ProviderDashboardPage() {
           onSubmit={handleSave}
           className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-5"
         >
+          <div>
+            <label className="text-sm text-gray-600">Profile Photo</label>
+            <div className="mt-1 flex items-center gap-4">
+              {imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={imageUrl}
+                  alt="Profile"
+                  className="w-16 h-16 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-300">
+                  <ImagePlus className="w-6 h-6" />
+                </div>
+              )}
+              <CldUploadWidget
+                signatureEndpoint="/api/sign-cloudinary-params"
+                options={{
+                  multiple: false,
+                  maxFiles: 1,
+                  resourceType: "image",
+                }}
+                onSuccess={(result) => {
+                  if (
+                    typeof result.info === "object" &&
+                    result.info &&
+                    "secure_url" in result.info
+                  ) {
+                    setImageUrl(
+                      (result.info as { secure_url: string }).secure_url,
+                    );
+                  }
+                }}
+              >
+                {({ open }) => (
+                  <button
+                    type="button"
+                    onClick={() => open()}
+                    className="px-4 py-2 rounded-full border border-gray-200 text-sm text-gray-600 hover:border-blue-300 hover:text-blue-600 transition"
+                  >
+                    {imageUrl ? "Change photo" : "Upload photo"}
+                  </button>
+                )}
+              </CldUploadWidget>
+            </div>
+          </div>
           <div className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3">
             <div>
               <p className="font-medium text-gray-900">Available for work</p>
