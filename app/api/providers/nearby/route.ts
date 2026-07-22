@@ -1,30 +1,3 @@
-// import { sql } from "@/lib/db";
-// import { NextResponse } from "next/server";
-
-// export async function GET(req: Request) {
-//   const { searchParams } = new URL(req.url);
-
-//   const lat = parseFloat(searchParams.get("lat") || "0");
-//   const lng = parseFloat(searchParams.get("lng") || "0");
-
-//   const providers = await sql`
-//     SELECT *,
-//     (
-//       6371 * acos(
-//         cos(radians(${lat})) *
-//         cos(radians(latitude)) *
-//         cos(radians(longitude) - radians(${lng})) +
-//         sin(radians(${lat})) *
-//         sin(radians(latitude))
-//       )
-//     ) AS distance
-//     FROM providers
-//     ORDER BY distance ASC;
-//   `;
-
-//   return NextResponse.json(providers);
-// }
-
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
@@ -33,6 +6,7 @@ type NearbyRow = {
   name: string;
   phone: string;
   bio: string | null;
+  image_url: string | null;
   rating: number | null;
   is_available: boolean | null;
   category_name: string;
@@ -60,6 +34,7 @@ export async function GET(req: Request) {
           p.name,
           p.phone,
           p.bio,
+          p.image_url,
           p.rating,
           p.is_available,
           c.name AS category_name,
@@ -84,6 +59,7 @@ export async function GET(req: Request) {
       name: p.name,
       phone: p.phone,
       bio: p.bio,
+      imageUrl: p.image_url,
       rating: p.rating,
       distance: p.distance,
       category: { name: p.category_name },
