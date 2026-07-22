@@ -23,6 +23,7 @@ type Provider = {
   name: string;
   phone: string;
   bio: string | null;
+  imageUrl: string | null;
   rating: number | null;
   isAvailable: boolean | null;
   category: { name: string };
@@ -202,13 +203,27 @@ export default function CategoryDetailPage() {
                 className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 p-6"
               >
                 <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-900">
-                      {provider.name}
-                    </h3>
-                    <p className="text-blue-600 font-medium">
-                      {provider.category.name}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-full bg-blue-100 text-blue-700 font-semibold flex items-center justify-center shrink-0 overflow-hidden">
+                      {provider.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={provider.imageUrl}
+                          alt={provider.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        provider.name.charAt(0).toUpperCase()
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900">
+                        {provider.name}
+                      </h3>
+                      <p className="text-blue-600 font-medium">
+                        {provider.category.name}
+                      </p>
+                    </div>
                   </div>
                   {provider.isAvailable && (
                     <span className="px-3 py-1 text-xs rounded-full bg-green-100 text-green-700">
