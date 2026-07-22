@@ -47,7 +47,8 @@ export async function PATCH(req: Request) {
 
   const parsed = await parseBody(req, updateProviderSchema);
   if ("error" in parsed) return parsed.error;
-  const { name, phone, bio, isAvailable, subcategoryIds } = parsed.data;
+  const { name, phone, bio, imageUrl, isAvailable, subcategoryIds } =
+    parsed.data;
 
   try {
     const existing = await prisma.provider.findUnique({
@@ -101,6 +102,7 @@ export async function PATCH(req: Request) {
           ...(name !== undefined ? { name } : {}),
           ...(phone !== undefined ? { phone } : {}),
           ...(bio !== undefined ? { bio: bio || null } : {}),
+          ...(imageUrl !== undefined ? { imageUrl: imageUrl || null } : {}),
           ...(isAvailable !== undefined ? { isAvailable } : {}),
         },
         include: {
