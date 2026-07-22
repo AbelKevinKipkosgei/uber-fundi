@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { parseBody } from "@/lib/validate";
 import { createProviderSchema } from "@/lib/schemas";
-import { clerkClient } from "@clerk/nextjs/server";
+import { resolveProviderImage } from "@/lib/resolveProviderImage";
 
 export async function POST(req: Request) {
   const { userId } = await auth();
@@ -60,46 +60,16 @@ export async function POST(req: Request) {
     }
   }
 
-  let finalImageUrl = imageUrl || null;
-
-  if (!finalImageUrl) {
-    try {
-      const client = await clerkClient();
-      const clerkUser = await client.users.getUser(userId);
-      finalImageUrl = clerkUser.imageUrl || null;
-    } catch (err) {
-      console.error("Failed to fetch Clerk image for new provider", err);
-      // Not fatal — registration still proceeds without a photo
-    }
-  }
-
-  const provider = await prisma.provider.create({
-    data: {
-      clerkUserId: userId,
-      name,
-      phone,
-      bio: bio || null,
-      imageUrl: finalImageUrl,
-      latitude,
-      longitude,
-      category: { connect: { id: categoryId } },
-      subcategories: {
-        create: subIds.map((subId) => ({
-          category: { connect: { id: subId } },
-        })),
-      },
-    },
-    include: { category: true, subcategories: { include: { category: true } } },
-  });
-
   try {
+    const finalImageUrl = await resolveProviderImage(userId, imageUrl);
+
     const provider = await prisma.provider.create({
       data: {
         clerkUserId: userId,
         name,
         phone,
         bio: bio || null,
-        imageUrl: imageUrl || null,
+        imageUrl: finalImageUrl,
         latitude,
         longitude,
         category: { connect: { id: categoryId } },
