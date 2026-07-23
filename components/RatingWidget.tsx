@@ -2,13 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { Star, AlertCircle } from "lucide-react";
+import { timeAgo } from "@/lib/timeAgo";
 
 type Review = {
   id: string;
   rating: number;
   comment: string | null;
   createdAt: string;
-  reviewer: { clerkUserId: string; name: string };
+  reviewer: {
+    clerkUserId: string;
+    name: string;
+    imageUrl: string | null;
+  };
 };
 
 export default function RatingWidget({
@@ -155,26 +160,51 @@ export default function RatingWidget({
               key={r.id}
               className="border-b border-gray-50 last:border-0 pb-4 last:pb-0"
             >
-              <div className="flex items-center justify-between">
-                <p className="font-medium text-gray-900 text-sm">
-                  {r.reviewer.name}
-                </p>
-                <div className="flex gap-0.5">
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <Star
-                      key={n}
-                      className={`w-3.5 h-3.5 ${
-                        n <= r.rating
-                          ? "text-yellow-500 fill-yellow-500"
-                          : "text-gray-200"
-                      }`}
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-full overflow-hidden bg-blue-100 shrink-0">
+                  {r.reviewer.imageUrl ? (
+                    <img
+                      src={r.reviewer.imageUrl}
+                      alt={r.reviewer.name}
+                      className="w-full h-full object-cover"
                     />
-                  ))}
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-sm font-semibold text-blue-700">
+                      {r.reviewer.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-900 text-sm">
+                        {r.reviewer.name}
+                      </span>
+
+                      <span className="text-xs text-gray-400">
+                        {timeAgo(r.createdAt)}
+                      </span>
+                    </div>
+                    <div className="flex gap-0.5">
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <Star
+                          key={n}
+                          className={`w-3.5 h-3.5 ${
+                            n <= r.rating
+                              ? "text-yellow-500 fill-yellow-500"
+                              : "text-gray-200"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {r.comment && (
+                    <p className="text-sm text-gray-600 mt-1">{r.comment}</p>
+                  )}
                 </div>
               </div>
-              {r.comment && (
-                <p className="text-sm text-gray-600 mt-1">{r.comment}</p>
-              )}
             </div>
           ))}
         </div>
