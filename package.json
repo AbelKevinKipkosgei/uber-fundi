@@ -9,6 +9,9 @@
     "start": "next start",
     "lint": "eslint"
   },
+  "release": {
+    "branches": ["main"]
+  },
   "dependencies": {
     "@clerk/nextjs": "^7.5.22",
     "@heroicons/react": "^2.2.0",
