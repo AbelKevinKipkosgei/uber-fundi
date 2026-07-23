@@ -5,7 +5,6 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Trash2, CornerDownRight, Heart } from "lucide-react";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { request } from "http";
 
 type Author = { clerkUserId: string; name: string; imageUrl: string | null };
 
@@ -238,7 +237,10 @@ export default function CommentSection({ postId }: { postId: string }) {
   const loadMoreReplies = async (parentId: string) => {
     setLoadingRepliesFor(parentId);
     try {
-      const cursor = replyCursors[parentId];
+      const cursor =
+        replyCursors[parentId] ??
+        comments.find((c) => c.id === parentId)?.replies.at(-1)?.id;
+
       const url = cursor
         ? `/api/comments/${parentId}/replies?cursor=${cursor}`
         : `/api/comments/${parentId}/replies`;
@@ -248,7 +250,17 @@ export default function CommentSection({ postId }: { postId: string }) {
       setComments((prev) =>
         prev.map((c) =>
           c.id === parentId
-            ? { ...c, replies: [...c.replies, ...(data.replies ?? [])] }
+            ? {
+                ...c,
+                replies: Array.from(
+                  new Map(
+                    [...c.replies, ...(data.replies ?? [])].map((reply) => [
+                      reply.id,
+                      reply,
+                    ]),
+                  ).values(),
+                ),
+              }
             : c,
         ),
       );
@@ -305,8 +317,10 @@ export default function CommentSection({ postId }: { postId: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           text,
-          parentId,
-          mentionedUserId: replyMentionTargets[parentId] || null,
+          ...(parentId ? { parentId } : {}),
+          ...(replyMentionTargets[parentId]
+            ? { mentionedUserId: replyMentionTargets[parentId] }
+            : {}),
         }),
       });
 
