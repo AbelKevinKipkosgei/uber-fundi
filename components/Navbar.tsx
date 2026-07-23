@@ -25,6 +25,7 @@ import {
 import NotificationBell from "@/components/NotificationBell";
 import SearchOverlay from "@/components/SearchOverlay";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 type NavItem = {
   href: string;
@@ -287,10 +288,25 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b bg-white/90 backdrop-blur-md">
-      <nav className="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
+      <nav className="max-w-7xl mx-auto flex justify-between items-center px-4 py-4">
         <div className="flex items-center gap-4">
-          <Link href="/" className="text-xl font-bold text-gray-900">
+          {/* <Link href="/" className="text-xl font-bold text-gray-900">
             <span className="text-blue-600">Uber</span>Fundi
+          </Link> */}
+
+          <Link href="/" className="flex items-center gap-1 md:gap-2">
+            <Image
+              src="/icon1.png"
+              alt="UberFundi"
+              width={60}
+              height={60}
+              priority
+              className="h-8 w-8"
+            />
+
+            <span className="text-lg md:text-xl font-bold text-gray-900 whitespace-nowrap">
+              <span className="text-blue-600">Uber</span>Fundi
+            </span>
           </Link>
 
           <button
