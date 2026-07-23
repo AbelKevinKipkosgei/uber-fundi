@@ -29,6 +29,7 @@ function iconForType(type: string) {
     case "NEW_RATING":
       return Star;
     case "COMMENT_LIKED":
+    case "POST_LIKED":
       return Heart;
     default:
       return BellOutline;
