@@ -56,8 +56,6 @@ export async function POST(
     return NextResponse.json({ error: "Invalid provider id" }, { status: 400 });
   }
 
-  const body = await req.json();
-
   const parsed = await parseBody(req, createReviewSchema);
   if ("error" in parsed) return parsed.error;
   const { rating, comment } = parsed.data;
