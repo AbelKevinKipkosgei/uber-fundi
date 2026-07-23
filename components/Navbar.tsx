@@ -78,7 +78,7 @@ function NavLink({
       </div>
 
       {/* Label */}
-      <span className="text-[11px] leading-none">{label}</span>
+      <span className="text-xs leading-none">{label}</span>
 
       {/* Active Indicator */}
       <span
@@ -302,7 +302,7 @@ export default function Navbar() {
           </button>
         </div>
 
-        <div className="hidden md:flex items-center gap-8 text-sm">
+        <div className="hidden lg:flex items-center gap-8 text-sm">
           {navItems.map((item) => (
             <NavLink
               key={item.href}
@@ -334,7 +334,7 @@ export default function Navbar() {
 
               <SignUpButton mode="modal">
                 <button className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition">
-                  Become a Provider
+                  Offer Services
                 </button>
               </SignUpButton>
             </>
@@ -356,7 +356,7 @@ export default function Navbar() {
 
           <button
             onClick={() => setMobileMenuOpen((v) => !v)}
-            className="md:hidden text-gray-600 hover:text-blue-600"
+            className="lg:hidden text-gray-600 hover:text-blue-600"
           >
             {mobileMenuOpen ? (
               <XMarkIcon className="w-6 h-6" />
@@ -368,7 +368,7 @@ export default function Navbar() {
       </nav>
 
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white">
+        <div className="lg:hidden border-t border-gray-100 bg-white">
           {navItems.map((item) => (
             <MobileNavRow
               key={item.href}
@@ -403,7 +403,7 @@ export default function Navbar() {
               </SignInButton>
               <SignUpButton mode="modal">
                 <button className="flex-1 text-sm font-medium text-white bg-blue-600 rounded-xl py-2">
-                  Become a Provider
+                  Offer Services
                 </button>
               </SignUpButton>
             </div>
